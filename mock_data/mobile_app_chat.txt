@@ -1,0 +1,14 @@
+[11/02/24, 10:15 AM] David (Client): Morning! Just tested the TestFlight build on my iPhone 15 Pro.
+[11/02/24, 10:18 AM] Elena (Freelancer): Morning David! Glad the build reached you. How does the rest timer feel?
+[11/02/24, 10:20 AM] David (Client): The timer chime is crisp, loved it.
+[11/02/24, 10:22 AM] David (Client): Quick question: Can we also sync this with Apple Watch so users see their live heart rate during sets?
+[11/02/24, 11:05 AM] Elena (Freelancer): Let me review what watchOS HealthKit permissions entail.
+[11/02/24, 11:06 AM] David (Client): Cool!
+[11/03/24, 2:30 PM] David (Client): Our fitness trainers want to include 30-second video clips demonstrating form for each exercise.
+[11/03/24, 2:32 PM] David (Client): Can we add an in-app video player to stream those exercise demos from Vimeo or AWS S3?
+[11/03/24, 4:15 PM] Elena (Freelancer): Checking the media player architecture.
+[11/04/24, 9:45 AM] David (Client): Hey Elena, also had another quick thought:
+[11/04/24, 9:47 AM] David (Client): Typing in food items manually is tedious. What if we add a camera barcode scanner to automatically scan nutrition labels on food packages?
+[11/04/24, 1:10 PM] David (Client): Ping me when you get a chance to discuss.
+[11/04/24, 1:12 PM] Elena (Freelancer): Will ping you around 3 PM!
+[11/04/24, 1:15 PM] David (Client): Great.

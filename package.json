@@ -1,0 +1,23 @@
+{
+  "name": "scopekernel",
+  "version": "1.0.0",
+  "description": "Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers",
+  "main": "run.py",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py",
+    "debug": "python run.py",
+    "test": "python -m pytest",
+    "audit": "python run.py"
+  },
+  "keywords": [
+    "freelance",
+    "scope-creep",
+    "gemma",
+    "ollama",
+    "local-ai",
+    "air-gapped"
+  ],
+  "author": "ScopeKernel Team",
+  "license": "MIT"
+}

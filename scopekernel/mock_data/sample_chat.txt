@@ -1,0 +1,45 @@
+[10/14/24, 9:02:15 AM] Sarah (Client): Good morning! Hope you had a great weekend.
+[10/14/24, 9:05:40 AM] Alex (Freelancer): Morning Sarah! Yes, hope yours was good too. Working on the product catalog today.
+[10/14/24, 9:06:12 AM] Sarah (Client): Awesome, looking forward to testing it.
+[10/14/24, 11:20:05 AM] Sarah (Client): Hey Alex, quick question. Can you share the latest staging link?
+[10/14/24, 11:22:18 AM] Alex (Freelancer): Sure thing! It's deployed at https://staging.artisanroasters.dev
+[10/14/24, 11:23:45 AM] Sarah (Client): Thanks! Testing now.
+[10/14/24, 11:45:10 AM] Sarah (Client): Looks super clean so far.
+[10/14/24, 11:46:02 AM] Alex (Freelancer): Glad you like it! Let me know if you run into any layout glitches.
+[10/14/24, 1:15:33 PM] Sarah (Client): Okay so our marketing director just tested the sign-up flow.
+[10/14/24, 1:16:04 PM] Sarah (Client): Can we quickly add Google and Apple OAuth logins? Most of our users won't want to type email and passwords manually.
+[10/14/24, 2:10:44 PM] Alex (Freelancer): Noted, looking into the authentication flow.
+[10/14/24, 2:11:00 PM] Sarah (Client): Cool!
+[10/14/24, 4:30:19 PM] Sarah (Client): On the product detail page, found a minor typo in the Ethiopian Yirgacheffe description.
+[10/14/24, 4:32:00 PM] Alex (Freelancer): Fixed the typo in the database!
+[10/14/24, 4:32:45 PM] Sarah (Client): Perfect, verified.
+[10/15/24, 10:00:22 AM] Sarah (Client): Morning!
+[10/15/24, 10:01:05 AM] Alex (Freelancer): Morning Sarah!
+[10/15/24, 10:14:18 AM] Sarah (Client): Just had a sync with our operations lead.
+[10/15/24, 10:15:02 AM] Sarah (Client): Just a small tweak: can we also trigger an automated WhatsApp SMS alert on sign-up and order placement? We want customers to get instant pings.
+[10/15/24, 11:40:50 AM] Alex (Freelancer): I see, let me review the messaging pipeline.
+[10/15/24, 11:41:20 AM] Sarah (Client): Thanks, appreciate it!
+[10/15/24, 3:20:11 PM] Sarah (Client): Will test the cart with test credit cards now.
+[10/15/24, 3:25:40 PM] Sarah (Client): The Stripe checkout flow went through smoothly.
+[10/15/24, 3:26:05 AM] Alex (Freelancer): Great, webhook confirmed the payment event.
+[10/16/24, 9:30:15 AM] Sarah (Client): Hey Alex!
+[10/16/24, 9:31:00 AM] Alex (Freelancer): Hey Sarah, what's up?
+[10/16/24, 9:32:10 AM] Sarah (Client): Our founder saw the store yesterday and loved the typography.
+[10/16/24, 9:33:45 AM] Sarah (Client): One quick change: make the user dashboard dark-mode by default. It looks much cooler with our brand aesthetic.
+[10/16/24, 11:05:12 AM] Sarah (Client): Also did you have a chance to review the mobile navigation drawer?
+[10/16/24, 11:08:30 AM] Alex (Freelancer): Yes, adjusted the drawer width for iOS Safari.
+[10/16/24, 11:09:15 AM] Sarah (Client): Perfect!
+[10/17/24, 2:14:02 PM] Sarah (Client): Hey, our partners in London and Berlin are interested in carrying our beans.
+[10/17/24, 2:15:30 PM] Sarah (Client): What if we let users switch currencies from USD to EUR and GBP with live exchange rate conversion on checkout?
+[10/17/24, 4:10:18 PM] Sarah (Client): Ping me when you're free for a quick call.
+[10/17/24, 4:15:00 PM] Alex (Freelancer): Will ping you around 5 PM.
+[10/17/24, 4:15:20 PM] Sarah (Client): Sounds good.
+[10/18/24, 10:45:12 AM] Sarah (Client): Morning!
+[10/18/24, 10:46:00 AM] Sarah (Client): Our accounting team brought up a compliance requirement.
+[10/18/24, 10:47:15 AM] Sarah (Client): Could we generate a downloadable PDF invoice for each order right on the receipt confirmation page?
+[10/18/24, 1:20:00 PM] Alex (Freelancer): Pushed updates for the order table sorting in admin.
+[10/18/24, 1:22:15 PM] Sarah (Client): Great, testing the admin panel now.
+[10/18/24, 1:25:30 PM] Sarah (Client): The search by customer email works nicely.
+[10/18/24, 3:45:10 PM] Sarah (Client): One more thing: can we also hook up an automated export to Excel (.xlsx) for the inventory counts in the admin?
+[10/18/24, 5:10:02 PM] Sarah (Client): Talk tomorrow! Have a good evening.
+[10/18/24, 5:11:00 PM] Alex (Freelancer): Thanks, have a good evening too!
