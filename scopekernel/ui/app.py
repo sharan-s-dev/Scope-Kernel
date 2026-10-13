@@ -289,8 +289,8 @@ with st.sidebar:
     )
 
     api_key_input = None
-    gemini_model_choice = "gemini-2.5-flash"
-    clean_gemini_slug = "gemini-2.5-flash"
+    gemini_model_choice = "gemini-3.8-flash"
+    clean_gemini_slug = "gemini-3.8-flash"
     if "Gemini" in engine_choice:
         api_key_input = st.text_input(
             "Google AI Studio API Key",
@@ -301,14 +301,14 @@ with st.sidebar:
         model_display = st.selectbox(
             "Google Model",
             options=[
-                "gemini-2.5-flash (Recommended)",
-                "gemini-1.5-flash (Universal)",
-                "gemini-2.5-flash-lite (Fast)",
-                "gemini-3.8-flash (Frontier)",
-                "gemini-2.0-flash (Legacy)",
+                "gemini-3.8-flash (Latest Flagship - Recommended)",
+                "gemini-1.5-flash (Universal Stable)",
+                "gemini-3.1-pro (Deep Reasoning)",
+                "gemini-3.1-flash-lite (Ultra Fast)",
+                "gemini-1.5-pro (Long Context)",
             ],
             index=0,
-            help="gemini-2.5-flash is Google's primary model with multi-model auto-fallback.",
+            help="gemini-3.8-flash is Google's latest flagship model with multi-model auto-fallback.",
         )
         clean_gemini_slug = model_display.split()[0]
 

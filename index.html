@@ -335,11 +335,11 @@
 
         <div id="geminiKeyContainer" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
           <select id="geminiModelSelector" style="font-size: 0.82rem; padding: 6px 8px;" onchange="toggleAiEngineInputs()">
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
-            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Universal)</option>
-            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fast)</option>
-            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Frontier)</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Legacy)</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Latest Flagship - Recommended)</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Universal Stable)</option>
+            <option value="gemini-3.1-pro">Gemini 3.1 Pro (Deep Reasoning)</option>
+            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Ultra Fast)</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Long Context)</option>
           </select>
           <input type="password" id="geminiApiKey" placeholder="Google AI Studio Key" style="width: 170px;" oninput="toggleAiEngineInputs()" />
           <button class="btn" style="padding: 5px 10px; font-size: 0.78rem;" onclick="testGeminiApiKey()">⚡ Test Key</button>
@@ -513,7 +513,7 @@
       const keyBox = document.getElementById("geminiKeyContainer");
       const statusPill = document.getElementById("kpiEngineStatus");
       const statusSub = document.getElementById("kpiEngineSub");
-      const model = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-2.5-flash";
+      const model = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-3.8-flash";
       const key = document.getElementById("geminiApiKey").value.trim();
 
       if (mode === "gemini_live") {
@@ -538,7 +538,8 @@
     async function testGeminiApiKey() {
       const key = document.getElementById("geminiApiKey").value.trim();
       const statusEl = document.getElementById("geminiKeyStatus");
-      const model = document.getElementById("geminiModelSelector").value;
+      const sel = document.getElementById("geminiModelSelector");
+      let model = sel ? sel.value : "gemini-3.8-flash";
       if (!key) {
         statusEl.innerHTML = "<span style='color: var(--danger);'>⚠️ Enter API key first</span>";
         showToast("⚠️ Please enter a Google AI Studio API key.");
@@ -546,9 +547,10 @@
       }
       statusEl.innerHTML = "<span style='color: var(--info);'>⏳ Pinging...</span>";
       const t0 = performance.now();
-      try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-        const resp = await fetch(endpoint, {
+
+      const pingModel = async (m) => {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+        return await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -556,16 +558,62 @@
             generationConfig: { maxOutputTokens: 5, temperature: 0.0 }
           })
         });
+      };
+
+      try {
+        let resp = await pingModel(model);
+        let activeModel = model;
+
+        // If preferred model returns 404 or "no longer available", auto-discover active models on user's account
+        if (!resp.ok) {
+          const errData = await resp.clone().json().catch(() => ({}));
+          const errMsg = (errData?.error?.message || "").toLowerCase();
+          if (resp.status === 404 || errMsg.includes("no longer available") || errMsg.includes("not found")) {
+            statusEl.innerHTML = "<span style='color: var(--warning);'>🔍 Discovering active models...</span>";
+            try {
+              const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+              if (listResp.ok) {
+                const listData = await listResp.json();
+                const availableModels = (listData.models || [])
+                  .filter(item => (item.supportedGenerationMethods || []).includes("generateContent"))
+                  .map(item => item.name.replace(/^models\//, ""));
+
+                const priority = ["gemini-3.8-flash", "gemini-1.5-flash", "gemini-3.1-pro", "gemini-3.1-flash-lite", "gemini-1.5-pro"];
+                let foundModel = priority.find(p => availableModels.includes(p)) || availableModels[0];
+
+                if (foundModel) {
+                  const retryResp = await pingModel(foundModel);
+                  if (retryResp.ok) {
+                    resp = retryResp;
+                    activeModel = foundModel;
+                    let opt = Array.from(sel.options).find(o => o.value === foundModel);
+                    if (!opt) {
+                      opt = document.createElement("option");
+                      opt.value = foundModel;
+                      opt.textContent = `${foundModel} (Account Active)`;
+                      sel.appendChild(opt);
+                    }
+                    sel.value = foundModel;
+                    showToast(`💡 Auto-switched to active model: ${foundModel}`);
+                  }
+                }
+              }
+            } catch (discErr) {
+              console.warn("Model auto-discovery error:", discErr);
+            }
+          }
+        }
+
         const lat = Math.round(performance.now() - t0);
         if (resp.ok) {
           statusEl.innerHTML = `<span style='color: var(--success);'>🟢 Connected (${lat}ms)</span>`;
-          showToast(`🟢 Google Gemini (${model}) connected successfully in ${lat}ms!`);
+          showToast(`🟢 Google Gemini (${activeModel}) connected successfully in ${lat}ms!`);
           toggleAiEngineInputs();
         } else {
           const errData = await resp.json().catch(() => ({}));
           const msg = errData?.error?.message || `HTTP ${resp.status}`;
           statusEl.innerHTML = `<span style='color: var(--danger);' title='${msg}'>🔴 Error (${resp.status})</span>`;
-          showToast(`🔴 Gemini API Error: ${msg.slice(0, 80)}`);
+          showToast(`🔴 Gemini API Error: ${msg.slice(0, 90)}`);
         }
       } catch (err) {
         statusEl.innerHTML = "<span style='color: var(--danger);'>🔴 Network Error</span>";
@@ -1036,8 +1084,8 @@
     }
 
     async function runGeminiCloudAudit(lines, ast, apiKey) {
-      const preferredModel = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-2.5-flash";
-      const fallbackModels = [preferredModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash", "gemini-2.0-flash"];
+      const preferredModel = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-3.8-flash";
+      const fallbackModels = [preferredModel, "gemini-3.8-flash", "gemini-1.5-flash", "gemini-3.1-pro", "gemini-3.1-flash-lite", "gemini-1.5-pro"];
       const modelsToTry = [...new Set(fallbackModels)];
 
       // Filter out messages sent by the freelancer so Gemini ONLY audits CLIENT messages
@@ -1144,6 +1192,68 @@ OUTPUT STRICT JSON ARRAY where each item has:
           }
           lastError = err.message;
         }
+      }
+
+      // If predefined models failed, try dynamic model discovery from the user's account
+      try {
+        const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const discovered = (listData.models || [])
+            .filter(item => (item.supportedGenerationMethods || []).includes("generateContent"))
+            .map(item => item.name.replace(/^models\//, ""));
+
+          for (const model of discovered) {
+            if (modelsToTry.includes(model)) continue;
+            try {
+              const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+              const resp = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+                })
+              });
+              if (!resp.ok) continue;
+
+              const data = await resp.json();
+              const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (!rawText) continue;
+
+              const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+              const parsedArray = JSON.parse(cleaned);
+              auditState.activeModel = model;
+
+              let results = [];
+              parsedArray.forEach(item => {
+                const origLine = candidateLines[item.id] || "";
+                const cleanMsg = origLine.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "");
+                const senderMatch = origLine.match(/^\[[^\]]+\]\s*([^:(]+)/);
+                const sender = senderMatch ? senderMatch[1].trim() : "Client";
+
+                results.push({
+                  raw: cleanMsg,
+                  line: origLine,
+                  isCreep: !!item.is_scope_creep,
+                  isNoise: false,
+                  feature: item.violating_feature || "Add-on Feature",
+                  clause: item.matched_clause || "Deliverables Boundary",
+                  reason: item.reasoning,
+                  hours: item.estimated_hours || (item.is_scope_creep ? 3.5 : 0),
+                  sender: sender,
+                  drafts: item.copilot_drafts
+                });
+              });
+
+              return results;
+            } catch (dErr) {
+              lastError = dErr.message;
+            }
+          }
+        }
+      } catch (discErr) {
+        console.warn("Dynamic model auto-discovery failed:", discErr);
       }
 
       throw new Error(lastError || "All Google Gemini models in fallback cascade failed.");

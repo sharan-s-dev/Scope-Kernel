@@ -37,7 +37,7 @@ class EngineConfig(BaseModel):
 
     base_url: str = "http://localhost:11434"
     model: str = "gemma2:2b"
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
     api_key: Optional[str] = None
     temperature: float = 0.0
     top_p: float = 0.2
@@ -153,13 +153,13 @@ class OllamaEngine:
         return self._dynamic_semantic_audit(prompt=prompt, contract=contract, message=message)
 
     @classmethod
-    def test_gemini_connection(cls, api_key: str, model: str = "gemini-2.5-flash") -> Dict[str, Any]:
+    def test_gemini_connection(cls, api_key: str, model: str = "gemini-3.8-flash") -> Dict[str, Any]:
         """Test API key validity and active model availability against Google AI Studio."""
         clean_key = (api_key or "").strip()
         if not clean_key:
             return {"success": False, "error": "No API key provided."}
 
-        models_to_test = [model, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
+        models_to_test = [model, "gemini-3.8-flash", "gemini-1.5-flash", "gemini-3.1-pro", "gemini-3.1-flash-lite", "gemini-1.5-pro"]
         seen = set()
         test_list = [m for m in models_to_test if not (m in seen or seen.add(m))]
 
@@ -198,6 +198,38 @@ class OllamaEngine:
             except Exception as e:
                 last_error = str(e)
 
+        # Dynamic account model discovery if standard models didn't respond
+        try:
+            with httpx.Client(timeout=6.0) as client:
+                list_resp = client.get(f"https://generativelanguage.googleapis.com/v1beta/models?key={clean_key}")
+                if list_resp.status_code == 200:
+                    models_data = list_resp.json().get("models", [])
+                    gen_models = [
+                        m.get("name", "").replace("models/", "")
+                        for m in models_data
+                        if "generateContent" in m.get("supportedGenerationMethods", [])
+                    ]
+                    body = {
+                        "contents": [{"parts": [{"text": "Reply with short word: OK"}]}],
+                        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 10},
+                    }
+                    for m in gen_models:
+                        if m in test_list:
+                            continue
+                        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={clean_key}"
+                        t0 = time.time()
+                        resp = client.post(endpoint, json=body)
+                        latency_ms = int((time.time() - t0) * 1000)
+                        if resp.status_code == 200:
+                            return {
+                                "success": True,
+                                "active_model": m,
+                                "latency_ms": latency_ms,
+                                "message": f"Verified live connection to Google Gemini ({m}) in {latency_ms}ms.",
+                            }
+        except Exception:
+            pass
+
         return {"success": False, "error": f"Google Gemini API error: {last_error}"}
 
     def _call_gemini_api(self, prompt: str, system_prompt: Optional[str]) -> Dict[str, Any]:
@@ -209,11 +241,11 @@ class OllamaEngine:
         # Multi-model fallback sequence: user preferred model first, then ultra-reliable fallbacks
         candidate_models = [
             self.config.gemini_model,
-            "gemini-2.5-flash",
-            "gemini-1.5-flash",
-            "gemini-2.5-flash-lite",
             "gemini-3.8-flash",
-            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-3.1-pro",
+            "gemini-3.1-flash-lite",
+            "gemini-1.5-pro",
         ]
         seen = set()
         models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
