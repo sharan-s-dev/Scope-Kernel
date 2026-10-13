@@ -80,7 +80,12 @@ OUTPUT STRICT JSON WITH THIS EXACT STRUCTURE:
             "Never output introductory or concluding conversational prose."
         )
 
-        response = self.engine.generate(prompt=prompt, system_prompt=system_prompt)
+        response = self.engine.generate(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            contract=contract,
+            message=message,
+        )
         data = response.get("data", {})
 
         is_creep = bool(data.get("is_scope_creep", False))

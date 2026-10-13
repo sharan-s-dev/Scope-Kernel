@@ -279,18 +279,36 @@ with st.sidebar:
 
     engine_choice = st.selectbox(
         "Inference Runtime",
-        options=["Auto-Detect (Localhost Gemma-2-2B)", "Offline Deterministic Mode (Zero GPU / Fast Demo)"],
+        options=[
+            "Auto-Detect (Localhost Gemma-2-2B)",
+            "Offline Dynamic Semantic Engine (Zero GPU / Zero Setup)",
+            "Live Google Gemini / Gemma API (Neural Cloud Mode)",
+        ],
         index=0,
-        help="Connects to Ollama on http://localhost:11434 with model gemma2:2b (Q4_K_M). If inactive, falls back safely to offline heuristics.",
+        help="Choose between on-device Ollama Gemma-2-2B, zero-cloud dynamic semantic analysis, or live Google Gemini API.",
     )
+
+    api_key_input = None
+    gemini_model_choice = "gemini-2.0-flash"
+    if "Gemini" in engine_choice:
+        api_key_input = st.text_input("Google AI Studio API Key", type="password", value=os.environ.get("GEMINI_API_KEY", ""), help="Get a free API key at https://aistudio.google.com")
+        gemini_model_choice = st.selectbox("Google Model", options=["gemini-2.0-flash", "gemini-1.5-flash"], index=0)
 
     ollama_url = st.text_input("Ollama Host", value="http://localhost:11434", help="Must be localhost or 127.0.0.1")
     model_name = st.text_input("Target Model", value="gemma2:2b", help="Google Gemma-2-2B-IT")
 
+    selected_mode = EngineMode.OLLAMA_LIVE
+    if "Offline" in engine_choice:
+        selected_mode = EngineMode.OFFLINE_SEMANTIC
+    elif "Gemini" in engine_choice:
+        selected_mode = EngineMode.GEMINI_API
+
     config = EngineConfig(
         base_url=ollama_url,
         model=model_name,
-        mode=EngineMode.OFFLINE_HEURISTIC if "Offline" in engine_choice else EngineMode.OLLAMA_LIVE,
+        gemini_model=gemini_model_choice,
+        api_key=api_key_input,
+        mode=selected_mode,
     )
     engine = OllamaEngine(config=config)
 

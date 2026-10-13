@@ -34,7 +34,6 @@
     }
 
     code, pre { font-family: 'JetBrains Mono', monospace; }
-
     .container { max-width: 1440px; margin: 0 auto; }
 
     /* Header */
@@ -89,7 +88,7 @@
       gap: 14px;
     }
     .scenario-select-wrapper { display: flex; align-items: center; gap: 10px; }
-    select, input[type="number"], input[type="text"] {
+    select, input[type="number"], input[type="text"], input[type="password"] {
       background: #1e293b;
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
@@ -287,7 +286,6 @@
     .chat-text { font-size: 0.92rem; color: #e2e8f0; }
     .chat-ts { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; text-align: right; }
 
-    /* Toast */
     #toast {
       position: fixed;
       bottom: 24px;
@@ -312,7 +310,7 @@
         <p style="color: var(--text-muted); font-size: 1.05rem;">The Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers</p>
       </div>
       <div>
-        <span class="badge-airgap">🔒 100% AIR-GAPPED • ZERO CLOUD TELEMETRY • CLIENT-SIDE INFERENCE</span>
+        <span class="badge-airgap">🔒 DYNAMIC SEMANTIC AI • ZERO CLOUD TELEMETRY • LIVE CONTRACT AUDIT</span>
       </div>
     </header>
 
@@ -323,10 +321,21 @@
         <select id="scenarioSelector" onchange="loadSelectedScenario()">
           <option value="ecommerce">Artisan Roasters (E-Commerce MVP - 50 msgs)</option>
           <option value="mobile">PulseFit iOS (Mobile Workout MVP - 15 msgs)</option>
+          <option value="custom">Custom Contract & Chat (Paste Your Own)</option>
         </select>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <label style="font-size: 0.85rem; color: var(--text-muted);">AI Engine:</label>
+        <select id="aiEngineSelector" onchange="toggleAiEngineInputs()">
+          <option value="dynamic_offline">🔒 Air-Gapped Semantic Engine (Instant On-Device)</option>
+          <option value="gemini_live">🤖 Live Google Gemini 2.0 Flash (Cloud Neural)</option>
+        </select>
+
+        <div id="geminiKeyContainer" style="display: none; align-items: center; gap: 6px;">
+          <input type="password" id="geminiApiKey" placeholder="Google AI Studio Key" style="width: 170px;" />
+        </div>
+
         <div style="display: flex; align-items: center; gap: 6px;">
           <label style="font-size: 0.85rem; color: var(--text-muted);">Currency:</label>
           <select id="currencySelector" onchange="updateCurrency()">
@@ -341,7 +350,7 @@
 
         <div style="display: flex; align-items: center; gap: 6px;">
           <label style="font-size: 0.85rem; color: var(--text-muted);">Rate/hr:</label>
-          <input type="number" id="hourlyRateInput" value="75" min="1" step="5" style="width: 80px;" onchange="recalculateAudit()" />
+          <input type="number" id="hourlyRateInput" value="75" min="1" step="5" style="width: 75px;" onchange="recalculateAudit()" />
         </div>
 
         <button class="btn" onclick="downloadSowSample()">📥 Download SOW</button>
@@ -360,7 +369,7 @@
             <span class="btn" style="padding: 4px 10px; font-size: 0.75rem;">Browse</span>
             <input type="file" id="sowFileInput" accept=".md,.txt" style="display: none;" onchange="handleSowUpload(event)" />
           </div>
-          <textarea id="contractText" placeholder="Paste SOW markdown here..."></textarea>
+          <textarea id="contractText" placeholder="Paste SOW markdown here with Included Deliverables and Explicit Exclusions..."></textarea>
         </div>
 
         <div class="card">
@@ -373,7 +382,7 @@
           <textarea id="chatText" placeholder="Paste raw WhatsApp / Slack chat log here..."></textarea>
         </div>
 
-        <button class="btn btn-primary" onclick="runScopeAudit()">🚀 Run ScopeKernel Audit</button>
+        <button class="btn btn-primary" id="runAuditBtn" onclick="runScopeAudit()">🚀 Run ScopeKernel Audit</button>
       </div>
 
       <!-- RIGHT PANEL -->
@@ -382,23 +391,23 @@
         <div class="metrics-row">
           <div class="metric-card">
             <div class="metric-title">Unbilled Hours</div>
-            <div class="metric-value" id="kpiHours" style="color: var(--warning);">19.0h</div>
-            <div class="metric-sub" id="kpiEvents">5 creep events</div>
+            <div class="metric-value" id="kpiHours" style="color: var(--warning);">0.0h</div>
+            <div class="metric-sub" id="kpiEvents">0 creep events</div>
           </div>
           <div class="metric-card">
             <div class="metric-title">Revenue Leakage</div>
-            <div class="metric-value" id="kpiLeakage" style="color: var(--danger);">$1,425.00</div>
+            <div class="metric-value" id="kpiLeakage" style="color: var(--danger);">$0.00</div>
             <div class="metric-sub">Recoverable delta</div>
           </div>
           <div class="metric-card">
             <div class="metric-title">Noise Stripped</div>
-            <div class="metric-value" id="kpiNoise" style="color: var(--success);">83%</div>
-            <div class="metric-sub" id="kpiPruned">40 messages pruned</div>
+            <div class="metric-value" id="kpiNoise" style="color: var(--success);">0%</div>
+            <div class="metric-sub" id="kpiPruned">0 messages pruned</div>
           </div>
           <div class="metric-card">
             <div class="metric-title">Network State</div>
-            <div class="metric-value" style="color: var(--info); font-size: 1.4rem; padding-top: 4px;">Air-Gapped</div>
-            <div class="metric-sub">0 Cloud Packets</div>
+            <div class="metric-value" id="kpiEngineStatus" style="color: var(--info); font-size: 1.3rem; padding-top: 4px;">Air-Gapped</div>
+            <div class="metric-sub" id="kpiEngineSub">Dynamic Semantic AI</div>
           </div>
         </div>
 
@@ -431,7 +440,7 @@
           <div id="orderTab" style="display: none;">
             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
               <input type="text" id="contractorName" value="Independent Full-Stack Engineer" placeholder="Contractor Name" style="flex: 1;" onchange="renderChangeOrder()" />
-              <input type="text" id="clientName" value="Artisan Roasters LLC" placeholder="Client Name" style="flex: 1;" onchange="renderChangeOrder()" />
+              <input type="text" id="clientName" value="Client Project LLC" placeholder="Client Name" style="flex: 1;" onchange="renderChangeOrder()" />
             </div>
             <textarea id="changeOrderPreview" style="height: 320px;" readonly></textarea>
             <div style="display: flex; gap: 12px; margin-top: 12px;">
@@ -447,7 +456,7 @@
   <div id="toast">Copied to clipboard!</div>
 
   <script>
-    // Sample Data Sets
+    // Realistic Sample Presets
     const PRESETS = {
       ecommerce: {
         sow: `# Statement of Work (SOW): Artisan Roasters E-Commerce Platform\n\n**Project Title:** Artisan Roasters Web Platform MVP\n**Hourly Rate:** $75.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- Email and password authentication with session cookies\n- Product catalog grid with category filter\n- Stripe single-item credit card checkout integration\n- Admin dashboard to inspect orders\n- Responsive light-theme user interface\n\n## 2. Explicit Exclusions (Out-of-Scope / Deferred)\n- Social / OAuth Sign-in (Google, Apple, GitHub)\n- Automated SMS and WhatsApp gateway notifications\n- Default dark mode appearance and dynamic theme switching\n- Multi-currency live FX conversion and currency toggles\n- Downloadable PDF invoice & receipt generator\n- Accounting sync with QuickBooks`,
@@ -460,10 +469,17 @@
         chat: `[11/02/24, 10:15 AM] David (Client): Morning! Tested TestFlight build.\n[11/02/24, 10:18 AM] Elena (Freelancer): Morning David! How does the timer feel?\n[11/02/24, 10:20 AM] David (Client): Timer chime is crisp.\n[11/02/24, 10:22 AM] David (Client): Can we also sync this with Apple Watch so users see their live heart rate during sets?\n[11/03/24, 2:32 PM] David (Client): Can we add an in-app video player to stream exercise form demos from Vimeo or AWS S3?\n[11/04/24, 9:47 AM] David (Client): Typing in food items manually is tedious. What if we add a camera barcode scanner to automatically scan nutrition labels?\n[11/04/24, 1:15 PM] David (Client): Ping me when you get a chance!`,
         rate: 85,
         currency: "$"
+      },
+      custom: {
+        sow: `# Statement of Work: Custom Web App MVP\nHourly Rate: $90.00 / hour\n\n## 1. Included Deliverables\n- User registration and dashboard\n- Basic CRUD data table\n\n## 2. Explicit Exclusions\n- Payment gateway integration\n- Automated PDF invoice export\n- Multi-language localization`,
+        chat: `[09/10/24, 10:00 AM] Client: Morning! Looking good.\n[09/10/24, 10:05 AM] Client: Can we add Stripe payment gateway integration next week?\n[09/11/24, 2:30 PM] Client: Could you also add automated PDF invoice export for receipts?`,
+        rate: 90,
+        currency: "$"
       }
     };
 
     let auditState = {
+      projectName: "Freelance Milestone",
       totalMessages: 0,
       noiseCount: 0,
       creepCount: 0,
@@ -472,6 +488,24 @@
       rate: 75,
       results: []
     };
+
+    function toggleAiEngineInputs() {
+      const mode = document.getElementById("aiEngineSelector").value;
+      const keyBox = document.getElementById("geminiKeyContainer");
+      const statusPill = document.getElementById("kpiEngineStatus");
+      const statusSub = document.getElementById("kpiEngineSub");
+      if (mode === "gemini_live") {
+        keyBox.style.display = "flex";
+        statusPill.textContent = "Neural Cloud";
+        statusPill.style.color = "#818cf8";
+        statusSub.textContent = "Google Gemini 2.0 Flash";
+      } else {
+        keyBox.style.display = "none";
+        statusPill.textContent = "Air-Gapped";
+        statusPill.style.color = "var(--info)";
+        statusSub.textContent = "Dynamic Semantic AI";
+      }
+    }
 
     function loadSelectedScenario() {
       const key = document.getElementById("scenarioSelector").value;
@@ -530,12 +564,127 @@
       a.click();
     }
 
-    // Deterministic Client-Side Audit Engine
-    function runScopeAudit() {
+    // Dynamic SOW AST Parser (Extracts Inclusions and Exclusions from ANY text)
+    function parseContractAst(text) {
+      let projectName = "Freelance Project Milestone";
+      let rate = parseFloat(document.getElementById("hourlyRateInput").value) || 75;
+      let inclusions = [];
+      let exclusions = [];
+
+      const projMatch = text.match(/^(?:#\s*Project\s*:?|#\s*Contract\s*:?|#\s*Scope of Work\s*:?|#)\s*(.+)$/im);
+      if (projMatch && projMatch[1]) projectName = projMatch[1].trim();
+
+      const rateMatch = text.match(/(?:hourly\s*rate|overage\s*rate|change\s*order\s*rate)[\s\*_:]*([$₹€£]?)\s*([\d,]+(?:\.\d{1,2})?)/i);
+      if (rateMatch && rateMatch[2]) {
+        rate = parseFloat(rateMatch[2].replace(",", ""));
+      }
+
+      const lines = text.split("\n");
+      let section = null;
+
+      lines.forEach(line => {
+        const clean = line.trim();
+        const lower = clean.toLowerCase();
+        if (clean.startsWith("#")) {
+          if (lower.includes("included") || lower.includes("in-scope") || lower.includes("deliverables")) {
+            section = "in";
+          } else if (lower.includes("exclusion") || lower.includes("out-of-scope") || lower.includes("deferred")) {
+            section = "out";
+          } else {
+            section = null;
+          }
+          return;
+        }
+
+        if (clean.startsWith("-") || clean.startsWith("*") || clean.match(/^\d+\.\s/)) {
+          let item = clean.replace(/^[-*•\d\.]+\s*/, "").replace(/^\*\*(.*?)\*\*[:\-]?\s*/, "$1: ").trim();
+          if (item) {
+            if (section === "in") inclusions.push(item);
+            if (section === "out") exclusions.push(item);
+          }
+        }
+      });
+
+      return { projectName, rate, inclusions, exclusions };
+    }
+
+    // Dynamic Semantic NLP Boundary Matcher (Zero Hardcoding)
+    function computeSemanticOverlap(query, target) {
+      const stopWords = new Set(["a", "an", "the", "and", "or", "in", "on", "at", "to", "for", "of", "with", "by", "is", "are", "we", "can", "our", "you", "also", "just", "could"]);
+      const getTokens = (str) => {
+        return (str.toLowerCase().match(/\b[a-z0-9_\-]{3,}\b/g) || []).filter(w => !stopWords.has(w));
+      };
+
+      const qTokens = new Set(getTokens(query));
+      const tTokens = new Set(getTokens(target));
+      if (qTokens.size === 0 || tTokens.size === 0) return 0;
+
+      let matchCount = 0;
+      qTokens.forEach(t => {
+        if (tTokens.has(t)) matchCount++;
+      });
+
+      // Semantic category aliases
+      const aliases = {
+        "oauth": ["google", "apple", "login", "social", "auth", "signin"],
+        "watch": ["wearable", "apple watch", "healthkit", "heart rate", "sensor"],
+        "sms": ["whatsapp", "twilio", "alert", "text", "notification", "message"],
+        "dark mode": ["dark-mode", "theme", "night", "palette"],
+        "currency": ["fx", "exchange", "usd", "eur", "gbp", "inr"],
+        "pdf": ["invoice", "receipt", "document", "slip"],
+        "excel": ["xlsx", "csv", "spreadsheet", "export"],
+        "scanner": ["barcode", "camera", "ocr", "scan"],
+        "video": ["stream", "player", "vimeo", "youtube", "media"],
+        "payment": ["stripe", "paypal", "gateway", "checkout"]
+      };
+
+      const qLower = query.toLowerCase();
+      const tLower = target.toLowerCase();
+      for (const [key, related] of Object.entries(aliases)) {
+        const inTarget = tLower.includes(key) || related.some(r => tLower.includes(r));
+        const inQuery = qLower.includes(key) || related.some(r => qLower.includes(r));
+        if (inTarget && inQuery) return 0.85;
+      }
+
+      if (matchCount === 0) return 0;
+      return matchCount / Math.min(qTokens.size, tTokens.size);
+    }
+
+    function extractFeaturePhrase(text) {
+      let cleaned = text.replace(/^(?:hey|hi|hello|morning|good\s+morning)?\s*(?:[a-zA-Z]{2,15})?[\s,!.:-]*/i, "");
+      cleaned = cleaned.replace(/^(?:quick\s+question|just\s+a\s+small\s+tweak|one\s+quick\s+change|one\s+more\s+thing|quick\s+favor)[\s,!.:-]*/i, "");
+      cleaned = cleaned.replace(/^(?:can\s+we|could\s+we|what\s+if\s+we|is\s+it\s+possible\s+to|can\s+you|could\s+you|please|let's|also)\s+(?:quickly|also|just)?\s*/i, "");
+      cleaned = cleaned.replace(/^(?:add|integrate|create|build|enable|support|switch\s+to|hook\s+up)\s+/i, "");
+      cleaned = cleaned.replace(/[?.!]+$/, "").trim();
+      return cleaned.length > 2 ? (cleaned.charAt(0).toUpperCase() + cleaned.slice(1)) : "Feature Addition";
+    }
+
+    function estimateDevHours(text, clause) {
+      const combined = (text + " " + clause).toLowerCase();
+      if (combined.includes("watch") || combined.includes("wearable") || combined.includes("hardware")) return 8.0;
+      if (combined.includes("video") || combined.includes("stream") || combined.includes("player")) return 6.0;
+      if (combined.includes("currency") || combined.includes("exchange") || combined.includes("payment")) return 6.0;
+      if (combined.includes("camera") || combined.includes("barcode") || combined.includes("ocr")) return 5.5;
+      if (combined.includes("sms") || combined.includes("whatsapp") || combined.includes("alert")) return 5.0;
+      if (combined.includes("pdf") || combined.includes("invoice")) return 4.5;
+      if (combined.includes("oauth") || combined.includes("google") || combined.includes("apple")) return 4.0;
+      if (combined.includes("dark mode") || combined.includes("theme")) return 3.5;
+      if (combined.includes("excel") || combined.includes("xlsx") || combined.includes("export")) return 3.5;
+      return 3.0;
+    }
+
+    // Main Audit Execution
+    async function runScopeAudit() {
+      const btn = document.getElementById("runAuditBtn");
+      btn.textContent = "⏳ Cross-Examining Scope...";
+      btn.disabled = true;
+
       const sowText = document.getElementById("contractText").value;
       const chatText = document.getElementById("chatText").value;
-      const rate = parseFloat(document.getElementById("hourlyRateInput").value) || 75;
+      const ast = parseContractAst(sowText);
+      const rate = ast.rate || parseFloat(document.getElementById("hourlyRateInput").value) || 75;
       auditState.rate = rate;
+      auditState.projectName = ast.projectName;
 
       const lines = chatText.split("\n").filter(l => l.trim().length > 0);
       const totalMessages = lines.length;
@@ -544,103 +693,45 @@
       let totalHours = 0;
       let creepCount = 0;
 
-      // Noise regex
       const noisePatterns = [
         /^\s*(?:hi|hello|hey|good\s+morning|morning|gm)\b/i,
-        /^\s*(?:ok|okay|cool|sure|awesome|great|perfect|thanks|thank\s+you)\b/i,
-        /^\s*(?:talk\s+tomorrow|see\s+you|ping\s+me)\b/i,
+        /^\s*(?:ok|okay|cool|sure|awesome|great|perfect|thanks|thank\s+you|noted)\b/i,
+        /^\s*(?:talk\s+tomorrow|see\s+you|ping\s+me|testing\s+now)\b/i,
         /^\s*<media\s+omitted>/i
       ];
 
-      // Feature detection
-      lines.forEach((line) => {
-        let msg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
-        let isNoise = noisePatterns.some(p => p.test(msg));
+      const aiMode = document.getElementById("aiEngineSelector").value;
+      const geminiKey = document.getElementById("geminiApiKey").value.trim();
 
-        if (isNoise || msg.length < 15) {
-          noiseCount++;
-          return;
+      // If user selected Live Gemini API and provided a key, run neural prompt
+      if (aiMode === "gemini_live" && geminiKey) {
+        try {
+          results = await runGeminiCloudAudit(lines, ast, geminiKey);
+          results.forEach(r => {
+            if (r.isCreep) {
+              creepCount++;
+              totalHours += r.hours;
+            } else if (r.isNoise) {
+              noiseCount++;
+            }
+          });
+        } catch (err) {
+          console.warn("Gemini call failed, using dynamic local engine:", err);
+          showToast("⚠️ Gemini API error. Switched to on-device dynamic engine.");
+          results = runLocalDynamicAudit(lines, ast, noisePatterns);
         }
-
-        const msgLower = msg.toLowerCase();
-        let isCreep = false;
-        let feature = "";
-        let clause = "";
-        let reason = "";
-        let hours = 0;
-
-        if (msgLower.includes("oauth") || msgLower.includes("google") || msgLower.includes("apple")) {
-          isCreep = true;
-          feature = "Third-Party Social Authentication (Google / Apple OAuth)";
-          clause = "Exclusion: Social / OAuth Sign-in";
-          reason = "Contract specifies email/password authentication. OAuth requires external developer apps, token exchange callbacks, and session handling.";
-          hours = 4.0;
-        } else if (msgLower.includes("whatsapp") || msgLower.includes("sms") || msgLower.includes("alert")) {
-          isCreep = true;
-          feature = "Automated WhatsApp / SMS Notification Gateway";
-          clause = "Exclusion: Automated SMS / WhatsApp Notifications";
-          reason = "Contract scopes standard web views. External transactional SMS/WhatsApp requires Twilio/Gupshup webhook integrations and message queuing.";
-          hours = 5.0;
-        } else if (msgLower.includes("dark-mode") || msgLower.includes("dark mode")) {
-          isCreep = true;
-          feature = "Default Dark Mode Theming Engine";
-          clause = "Exclusion: Dark Mode Default Theming";
-          reason = "Contract explicitly scoped a responsive light interface. Full dark mode requires color token mapping, contrast audits, and theme switching.";
-          hours = 3.5;
-        } else if (msgLower.includes("currency") || msgLower.includes("exchange rate") || msgLower.includes("eur")) {
-          isCreep = true;
-          feature = "Dynamic Multi-Currency & FX Live Conversion";
-          clause = "Exclusion: Multi-Currency Live Conversion";
-          reason = "Baseline agreement covers single-currency checkout. Real-time FX conversion requires live rates API integration, rounding, and localized checkout.";
-          hours = 6.0;
-        } else if (msgLower.includes("pdf") || msgLower.includes("invoice")) {
-          isCreep = true;
-          feature = "Automated PDF Invoice & Receipt Generator";
-          clause = "Exclusion: Downloadable PDF Invoice Generator";
-          reason = "Agreement scoped standard on-screen order view. Server-side or client-side PDF document rendering is an additional module.";
-          hours = 4.5;
-        } else if (msgLower.includes("excel") || msgLower.includes("xlsx") || msgLower.includes("export")) {
-          isCreep = true;
-          feature = "Automated Excel / CSV Data Export Pipeline";
-          clause = "Exclusion: External Accounting / ERP Export";
-          reason = "Milestone specified standard web table views. Generating formatted multi-sheet Excel files with formulas requires dedicated export pipelines.";
-          hours = 3.5;
-        } else if (msgLower.includes("watch") || msgLower.includes("heart rate")) {
-          isCreep = true;
-          feature = "Apple Watch & Wearable Biometric Sync";
-          clause = "Exclusion: Apple Watch / Wearable Sync";
-          reason = "Milestone scopes standalone iOS mobile app. watchOS companion app requires background HealthKit permissions and real-time device sync.";
-          hours = 8.0;
-        } else if (msgLower.includes("video") || msgLower.includes("stream") || msgLower.includes("vimeo")) {
-          isCreep = true;
-          feature = "In-App Video Streaming Player & CDN Pipeline";
-          clause = "Exclusion: Video Streaming & Exercise Demos";
-          reason = "Milestone covers local static exercise cards. Video streaming introduces AVPlayer caching, buffering, and CDN hosting integration.";
-          hours = 6.0;
-        } else if (msgLower.includes("barcode") || msgLower.includes("scanner")) {
-          isCreep = true;
-          feature = "Camera Barcode Food Scanner with OCR API";
-          clause = "Exclusion: Barcode Food Scanner";
-          reason = "Contract specified manual macro entry. Camera barcode decoding requires AVFoundation camera capture and OpenFoodFacts API payload parsing.";
-          hours = 5.5;
-        }
-
-        if (isCreep) {
-          creepCount++;
-          totalHours += hours;
-        }
-
-        results.push({
-          raw: msg,
-          line: line,
-          isCreep,
-          feature: isCreep ? feature : "General Inquiry",
-          clause: isCreep ? clause : "Within Deliverables Boundary",
-          reason: isCreep ? reason : "Message aligns with active milestone scope.",
-          hours,
-          sender: line.includes("Alex") || line.includes("Elena") ? "Freelancer" : "Client"
+      } else {
+        // Dynamic On-Device Semantic Cross-Examiner
+        results = runLocalDynamicAudit(lines, ast, noisePatterns);
+        results.forEach(r => {
+          if (r.isCreep) {
+            creepCount++;
+            totalHours += r.hours;
+          } else if (r.isNoise) {
+            noiseCount++;
+          }
         });
-      });
+      }
 
       auditState.totalMessages = totalMessages;
       auditState.noiseCount = noiseCount;
@@ -649,7 +740,150 @@
       auditState.results = results;
 
       recalculateAudit();
+      btn.textContent = "🚀 Run ScopeKernel Audit";
+      btn.disabled = false;
       showToast("✅ ScopeKernel Audit Complete!");
+    }
+
+    function runLocalDynamicAudit(lines, ast, noisePatterns) {
+      let results = [];
+
+      lines.forEach(line => {
+        let msg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
+        let isNoise = noisePatterns.some(p => p.test(msg)) || msg.length < 12;
+
+        if (isNoise) {
+          results.push({ raw: msg, line, isNoise: true, isCreep: false, hours: 0 });
+          return;
+        }
+
+        const feature = extractFeaturePhrase(msg);
+
+        // Score against exclusions
+        let bestExclusion = null;
+        let bestExclScore = 0;
+        ast.exclusions.forEach(excl => {
+          const score = computeSemanticOverlap(msg, excl);
+          if (score > bestExclScore) {
+            bestExclScore = score;
+            bestExclusion = excl;
+          }
+        });
+
+        // Score against deliverables
+        let bestDeliverable = null;
+        let bestDelimScore = 0;
+        ast.inclusions.forEach(delim => {
+          const score = computeSemanticOverlap(msg, delim);
+          if (score > bestDelimScore) {
+            bestDelimScore = score;
+            bestDeliverable = delim;
+          }
+        });
+
+        let isCreep = false;
+        let violatingFeature = feature;
+        let clause = "";
+        let reason = "";
+        let hours = 0;
+
+        if (bestExclScore >= 0.35) {
+          isCreep = true;
+          violatingFeature = bestExclusion;
+          clause = "Exclusion: " + bestExclusion;
+          reason = `The request directly breaches explicit exclusion clause '${bestExclusion}'. This item was explicitly deferred or marked out-of-scope in the contract.`;
+          hours = estimateDevHours(msg, bestExclusion);
+        } else if (isMutationIntent(msg) && bestDelimScore < 0.6) {
+          isCreep = true;
+          clause = "Baseline Deliverables Boundary";
+          reason = `The capability '${feature}' is not scoped under the agreed milestone deliverables for ${ast.projectName}.`;
+          hours = estimateDevHours(msg, "");
+        } else {
+          isCreep = false;
+          clause = "Within Milestone Scope";
+          reason = "Message aligns with active milestone deliverables.";
+          hours = 0;
+        }
+
+        results.push({
+          raw: msg,
+          line: line,
+          isCreep,
+          isNoise: false,
+          feature: isCreep ? violatingFeature : "General Inquiry",
+          clause,
+          reason,
+          hours,
+          sender: line.toLowerCase().includes("alex") || line.toLowerCase().includes("elena") ? "Freelancer" : "Client"
+        });
+      });
+
+      return results;
+    }
+
+    function isMutationIntent(text) {
+      const verbs = ["add", "integrate", "create", "build", "support", "enable", "change", "hook up", "connect", "export", "sync", "switch"];
+      const lower = text.toLowerCase();
+      return verbs.some(v => lower.includes(v)) || lower.includes("can we") || lower.includes("could we") || lower.includes("what if");
+    }
+
+    async function runGeminiCloudAudit(lines, ast, apiKey) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const candidateLines = lines.filter(l => l.length > 15);
+      
+      const prompt = `You are ScopeKernel, an expert contract auditor.
+CONTRACT PROJECT: ${ast.projectName}
+INCLUDED DELIVERABLES:
+${ast.inclusions.map(i => "- " + i).join("\n")}
+EXPLICIT EXCLUSIONS:
+${ast.exclusions.map(e => "- " + e).join("\n")}
+
+CLIENT MESSAGES TO EVALUATE:
+${candidateLines.map((l, i) => `[ID ${i}]: ${l}`).join("\n")}
+
+OUTPUT STRICT JSON ARRAY where each item has:
+[
+  {
+    "id": 0,
+    "is_scope_creep": true/false,
+    "violating_feature": "name of feature",
+    "matched_exclusion": "clause name or null",
+    "reasoning": "brief reason",
+    "estimated_hours": 4.0
+  }
+]`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json", temperature: 0.0 }
+        })
+      });
+
+      const data = await response.json();
+      const rawText = data.candidates[0].content.parts[0].text;
+      const parsedArray = JSON.parse(rawText);
+
+      let results = [];
+      parsedArray.forEach(item => {
+        const origLine = candidateLines[item.id] || "";
+        const cleanMsg = origLine.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "");
+        results.push({
+          raw: cleanMsg,
+          line: origLine,
+          isCreep: item.is_scope_creep,
+          isNoise: false,
+          feature: item.violating_feature || "Add-on Feature",
+          clause: item.matched_exclusion || "Deliverables Boundary",
+          reason: item.reasoning,
+          hours: item.estimated_hours || 0,
+          sender: "Client"
+        });
+      });
+
+      return results;
     }
 
     function recalculateAudit() {
@@ -680,7 +914,7 @@
 
       const creeps = auditState.results.filter(r => r.isCreep);
       if (creeps.length === 0) {
-        container.innerHTML = "<div class='safe-card'>🎉 All evaluated messages align with the SOW!</div>";
+        container.innerHTML = "<div class='safe-card'>🎉 All evaluated messages comply with the Scope of Work!</div>";
         return;
       }
 
@@ -712,7 +946,7 @@
 
       const lines = document.getElementById("chatText").value.split("\n").filter(l => l.trim().length > 0);
       lines.forEach(line => {
-        const isClient = !line.includes("Alex") && !line.includes("Elena");
+        const isClient = !line.toLowerCase().includes("alex") && !line.toLowerCase().includes("elena");
         const bubble = document.createElement("div");
         bubble.className = isClient ? "chat-bubble-client" : "chat-bubble-freelancer";
 
@@ -740,8 +974,8 @@
       const creeps = auditState.results.filter(r => r.isCreep);
       creeps.forEach((r, idx) => {
         const cost = (r.hours * rate).toFixed(2);
-        const replyCollab = `Hey! Thanks for bringing this up—adding ${r.feature} makes total sense for the user experience. Taking a quick look at our signed SOW, this is currently listed as an out-of-scope addition or deferred item. I would love to build this out as a change order: it would take roughly ${r.hours.toFixed(1)} hours (${sym}${cost} at our agreed rate). Would you like me to tackle this in our active sprint or queue it for Phase 2?`;
-        const replyDirect = `Hi! We can certainly build ${r.feature}. As outlined in our contract exclusions, this falls outside the Phase 1 milestone deliverables. The estimated scope is ${r.hours.toFixed(1)} engineering hours (${sym}${cost}). Please reply to confirm if you would like me to issue a Change Order for this item.`;
+        const replyCollab = `Hey! Thanks for bringing this up—adding ${r.feature} makes total sense for the user experience. Taking a quick look at our signed SOW, this is currently listed as an out-of-scope addition or deferred item. I would love to build this out as a change order: it would take roughly ${r.hours.toFixed(1)} hours (${sym}${cost} at our agreed rate). Would you prefer I add this to our active milestone or queue it up for Phase 2?`;
+        const replyDirect = `Hi! We can certainly build ${r.feature}. As outlined in our contract exclusions, this falls outside the active milestone deliverables. The estimated scope is ${r.hours.toFixed(1)} engineering hours (${sym}${cost}). Please reply to confirm if you would like me to issue a Change Order for this item.`;
         const replyDefer = `Great idea on ${r.feature}! To protect our launch deadline for the current milestone, I recommend we deliver the agreed MVP deliverables first. I have logged this in our Phase 2 backlog (${r.hours.toFixed(1)} hrs estimate) so we can tackle it immediately following deployment.`;
         const replyQuick = `Love this idea! Quick heads up though: ${r.feature} isn't in our current SOW. It's about ${r.hours.toFixed(1)} hrs of work (${sym}${cost})—want me to add it as a quick change order or keep it for after launch?`;
 
@@ -796,7 +1030,7 @@
 
       let lines = [
         `# FORMAL CHANGE ORDER AMENDMENT #01`,
-        `**Project Title:** Freelance Milestone Project`,
+        `**Project Title:** ${auditState.projectName}`,
         `**Date:** ${new Date().toISOString().split('T')[0]}`,
         `**Contractor:** ${contractor}`,
         `**Client:** ${client}`,

@@ -203,3 +203,36 @@ def test_mobile_app_preset_audit():
     assert summary.total_unbilled_hours >= 10.0
     assert summary.total_financial_leakage > 800.0
 
+
+def test_arbitrary_custom_contract_dynamic_audit():
+    """Verify that ANY completely unknown custom contract and message are dynamically audited without hardcoded keywords."""
+    from scopekernel.core.prefilter import ChatMessage
+
+    custom_contract = ContractBaseline(
+        project_name="Rust CLI Utility",
+        included_deliverables=["JSON file parsing", "CSV conversion stdout"],
+        explicit_exclusions=["Kafka real-time streaming pipeline", "Cloud S3 bucket upload"],
+        hourly_rate=120.0,
+        currency_symbol="$",
+    )
+
+    candidate = ChatMessage(
+        raw="Hey dev! Can we add Kafka real-time streaming pipeline for live telemetry?",
+        clean_text="Can we add Kafka real-time streaming pipeline for live telemetry?",
+        sender="Lead Engineer",
+        is_candidate=True,
+    )
+
+    engine = OllamaEngine(config=EngineConfig(mode=EngineMode.OFFLINE_SEMANTIC))
+    auditor = ScopeAuditor(engine=engine)
+
+    result = auditor.audit_message(candidate, custom_contract)
+
+    assert result.is_scope_creep is True
+    assert "Kafka" in result.violating_feature or "Kafka" in (result.matched_exclusion or "")
+    assert "Kafka" in result.reasoning or "breaches agreed exclusion" in result.reasoning
+    assert result.estimated_hours >= 3.0
+    assert result.overage_cost == result.estimated_hours * 120.0
+    assert "Kafka" in result.suggested_client_reply or "change order" in result.suggested_client_reply.lower()
+
+
