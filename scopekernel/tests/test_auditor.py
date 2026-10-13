@@ -268,4 +268,20 @@ def test_gemini_connection_validator():
     assert "Invalid Google AI Studio Key" in res_invalid["error"] or "API error" in res_invalid["error"]
 
 
+def test_freelancer_delivery_messages_ignored_from_creep():
+    """Verify that deployment links and status updates sent by the freelancer are never flagged as scope creep."""
+    from scopekernel.core.prefilter import extract_chat_messages, is_freelancer_sender
+
+    assert is_freelancer_sender("Alex (Freelancer)") is True
+    assert is_freelancer_sender("Elena (Developer)") is True
+    assert is_freelancer_sender("Client") is False
+
+    raw_chat = "[10/12/2026, 14:00] Alex (Freelancer): Deployed at https://staging.artisanroasters.dev"
+    messages = extract_chat_messages(raw_chat)
+    assert len(messages) == 1
+    assert messages[0].is_candidate is False, "Freelancer deployment update must NOT be treated as a candidate creep request"
+
+
+
+
 

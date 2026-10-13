@@ -142,6 +142,14 @@ def parse_chat_line(line: str) -> Tuple[Optional[str], Optional[str], str]:
     return None, None, line_clean
 
 
+def is_freelancer_sender(sender: Optional[str]) -> bool:
+    """Check if sender is the freelancer/developer rather than the client."""
+    if not sender:
+        return False
+    lower = sender.lower()
+    return any(k in lower for k in ["freelancer", "developer", "contractor", "alex", "elena", "priya", "engineer", "dev"])
+
+
 def extract_chat_messages(raw_chat_text: str) -> List[ChatMessage]:
     """Parse raw chat log export into structured ChatMessage objects.
 
@@ -161,12 +169,18 @@ def extract_chat_messages(raw_chat_text: str) -> List[ChatMessage]:
         body = " ".join(current_body_lines).strip()
         raw = "\n".join(current_raw_lines).strip()
         if body:
-            candidate = is_candidate_feature_request(body)
+            sender_name = current_sender or "Client"
+            # Only client requests can be scope creep candidates
+            if is_freelancer_sender(sender_name):
+                candidate = False
+            else:
+                candidate = is_candidate_feature_request(body)
+
             messages.append(
                 ChatMessage(
                     raw=raw,
                     clean_text=body,
-                    sender=current_sender or "Client",
+                    sender=sender_name,
                     timestamp=current_ts,
                     is_candidate=candidate,
                 )

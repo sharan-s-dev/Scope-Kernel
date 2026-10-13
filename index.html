@@ -334,14 +334,14 @@
         </select>
 
         <div id="geminiKeyContainer" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <select id="geminiModelSelector" style="font-size: 0.82rem; padding: 6px 8px;">
+          <select id="geminiModelSelector" style="font-size: 0.82rem; padding: 6px 8px;" onchange="toggleAiEngineInputs()">
             <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
             <option value="gemini-1.5-flash">Gemini 1.5 Flash (Universal)</option>
             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fast)</option>
             <option value="gemini-3.8-flash">Gemini 3.8 Flash (Frontier)</option>
             <option value="gemini-2.0-flash">Gemini 2.0 Flash (Legacy)</option>
           </select>
-          <input type="password" id="geminiApiKey" placeholder="Google AI Studio Key" style="width: 170px;" />
+          <input type="password" id="geminiApiKey" placeholder="Google AI Studio Key" style="width: 170px;" oninput="toggleAiEngineInputs()" />
           <button class="btn" style="padding: 5px 10px; font-size: 0.78rem;" onclick="testGeminiApiKey()">⚡ Test Key</button>
           <span id="geminiKeyStatus" style="font-size: 0.78rem; font-weight: 600;"></span>
         </div>
@@ -514,11 +514,19 @@
       const statusPill = document.getElementById("kpiEngineStatus");
       const statusSub = document.getElementById("kpiEngineSub");
       const model = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-2.5-flash";
+      const key = document.getElementById("geminiApiKey").value.trim();
+
       if (mode === "gemini_live") {
         keyBox.style.display = "flex";
-        statusPill.textContent = "Neural Cloud";
-        statusPill.style.color = "#818cf8";
-        statusSub.textContent = `Google Gemini (${model})`;
+        if (!key) {
+          statusPill.textContent = "Awaiting Key";
+          statusPill.style.color = "var(--warning)";
+          statusSub.textContent = `Google Gemini (${model})`;
+        } else {
+          statusPill.textContent = "Neural Cloud";
+          statusPill.style.color = "#818cf8";
+          statusSub.textContent = `Google Gemini (${model}) Ready`;
+        }
       } else {
         keyBox.style.display = "none";
         statusPill.textContent = "Air-Gapped";
@@ -552,6 +560,7 @@
         if (resp.ok) {
           statusEl.innerHTML = `<span style='color: var(--success);'>🟢 Connected (${lat}ms)</span>`;
           showToast(`🟢 Google Gemini (${model}) connected successfully in ${lat}ms!`);
+          toggleAiEngineInputs();
         } else {
           const errData = await resp.json().catch(() => ({}));
           const msg = errData?.error?.message || `HTTP ${resp.status}`;
@@ -564,6 +573,33 @@
       }
     }
 
+    function resetAuditState() {
+      auditState.totalMessages = 0;
+      auditState.noiseCount = 0;
+      auditState.creepCount = 0;
+      auditState.totalHours = 0;
+      auditState.results = [];
+
+      document.getElementById("kpiHours").textContent = "0.0h";
+      document.getElementById("kpiEvents").textContent = "Ready to audit";
+      document.getElementById("kpiLeakage").textContent = `${auditState.currency}0.00`;
+      document.getElementById("kpiNoise").textContent = "0%";
+      document.getElementById("kpiPruned").textContent = "Click Run Audit";
+
+      toggleAiEngineInputs();
+
+      document.getElementById("matrixList").innerHTML = `
+        <div style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+          <div style="font-size: 2.2rem; margin-bottom: 12px;">🛡️</div>
+          <div style="font-size: 1.1rem; font-weight: 600; color: #f8fafc; margin-bottom: 6px;">ScopeKernel Engine Ready</div>
+          <div style="font-size: 0.9rem;">Review the contract baseline and chat stream on the left, then click <strong style="color: var(--accent);">'🚀 Run ScopeKernel Audit'</strong> to start cross-examination.</div>
+        </div>
+      `;
+      document.getElementById("threadList").innerHTML = `<div style="text-align: center; padding: 36px 20px; color: var(--text-muted);">Chat thread visualizer will render after clicking Run ScopeKernel Audit.</div>`;
+      document.getElementById("copilotList").innerHTML = `<div style="text-align: center; padding: 36px 20px; color: var(--text-muted);">Diplomatic negotiation drafts will appear here once unbilled scope creep is detected.</div>`;
+      document.getElementById("changeOrderPreview").value = "Formal Change Order agreement will be compiled after clicking Run ScopeKernel Audit.";
+    }
+
     function loadSelectedScenario() {
       const key = document.getElementById("scenarioSelector").value;
       const data = PRESETS[key] || PRESETS.ecommerce;
@@ -573,12 +609,16 @@
       document.getElementById("currencySelector").value = data.currency;
       auditState.currency = data.currency;
       auditState.rate = data.rate;
-      runScopeAudit();
+      resetAuditState();
     }
 
     function updateCurrency() {
       auditState.currency = document.getElementById("currencySelector").value;
-      recalculateAudit();
+      if (auditState.results.length > 0) {
+        recalculateAudit();
+      } else {
+        document.getElementById("kpiLeakage").textContent = `${auditState.currency}0.00`;
+      }
     }
 
     function handleSowUpload(e) {
@@ -587,7 +627,8 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         document.getElementById("contractText").value = evt.target.result;
-        runScopeAudit();
+        resetAuditState();
+        showToast("📄 Contract SOW uploaded. Click 'Run ScopeKernel Audit' to evaluate.");
       };
       reader.readAsText(file);
     }
@@ -598,7 +639,8 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         document.getElementById("chatText").value = evt.target.result;
-        runScopeAudit();
+        resetAuditState();
+        showToast("💬 Chat stream uploaded. Click 'Run ScopeKernel Audit' to evaluate.");
       };
       reader.readAsText(file);
     }
@@ -817,8 +859,15 @@
       const aiMode = document.getElementById("aiEngineSelector").value;
       const geminiKey = document.getElementById("geminiApiKey").value.trim();
 
-      // If user selected Live Gemini API and provided a key, run neural prompt with multi-model fallback
-      if (aiMode === "gemini_live" && geminiKey) {
+      // If user selected Live Gemini API, verify key is provided
+      if (aiMode === "gemini_live") {
+        if (!geminiKey) {
+          btn.textContent = "🚀 Run ScopeKernel Audit";
+          btn.disabled = false;
+          showToast("⚠️ Google AI Studio API key required for Neural Cloud. Paste your key or switch AI Engine to Air-Gapped mode.");
+          document.getElementById("geminiApiKey").focus();
+          return;
+        }
         try {
           results = await runGeminiCloudAudit(lines, ast, geminiKey);
           auditState.isCloud = true;
@@ -873,6 +922,12 @@
       btn.disabled = false;
     }
 
+    function isFreelancerSender(sender) {
+      if (!sender) return false;
+      const s = sender.toLowerCase();
+      return s.includes("freelancer") || s.includes("developer") || s.includes("contractor") || s.includes("alex") || s.includes("elena") || s.includes("priya") || s.includes("engineer") || s.includes("dev");
+    }
+
     function runLocalDynamicAudit(lines, ast, noisePatterns) {
       let results = [];
 
@@ -880,8 +935,30 @@
         let cleanMsg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
         let isNoise = noisePatterns.some(p => p.test(cleanMsg)) || cleanMsg.length < 10;
 
+        // Extract sender
+        const senderMatch = line.match(/^\[[^\]]+\]\s*([^:(]+)/);
+        const sender = senderMatch ? senderMatch[1].trim() : (line.toLowerCase().includes("alex") || line.toLowerCase().includes("elena") || line.toLowerCase().includes("priya") ? "Freelancer" : "Client");
+        const clientName = isFreelancerSender(sender) ? "there" : sender;
+
+        // Freelancer updates (e.g. "Deployed at https://...") are legitimate delivery updates, NEVER scope creep!
+        if (isFreelancerSender(sender)) {
+          results.push({
+            raw: cleanMsg,
+            line: line,
+            isCreep: false,
+            isNoise: false,
+            feature: "Freelancer Milestone Delivery",
+            clause: "Agreed Baseline Execution",
+            reason: "Milestone status update / deployment link from engineering team.",
+            hours: 0,
+            sender: sender,
+            drafts: null
+          });
+          return;
+        }
+
         if (isNoise) {
-          results.push({ raw: cleanMsg, line, isNoise: true, isCreep: false, hours: 0 });
+          results.push({ raw: cleanMsg, line, isNoise: true, isCreep: false, hours: 0, sender });
           return;
         }
 
@@ -933,11 +1010,6 @@
           hours = 0;
         }
 
-        // Extract sender and client name
-        const senderMatch = line.match(/^\[[^\]]+\]\s*([^:(]+)/);
-        const sender = senderMatch ? senderMatch[1].trim() : (line.toLowerCase().includes("alex") || line.toLowerCase().includes("elena") || line.toLowerCase().includes("priya") ? "Freelancer" : "Client");
-        const clientName = sender !== "Freelancer" ? sender : "there";
-
         const drafts = isCreep ? generateDynamicCopilotDrafts(violatingFeature, cleanMsg, clause, hours, auditState.rate, auditState.currency, clientName, ast.projectName) : null;
 
         results.push({
@@ -968,7 +1040,13 @@
       const fallbackModels = [preferredModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash", "gemini-2.0-flash"];
       const modelsToTry = [...new Set(fallbackModels)];
 
-      const candidateLines = lines.filter(l => l.length > 12);
+      // Filter out messages sent by the freelancer so Gemini ONLY audits CLIENT messages
+      const candidateLines = lines.filter(l => {
+        if (l.length <= 12) return false;
+        const senderMatch = l.match(/^\[[^\]]+\]\s*([^:(]+)/);
+        const sender = senderMatch ? senderMatch[1].trim() : "";
+        return !isFreelancerSender(sender);
+      });
 
       const prompt = `You are ScopeKernel, an expert contract auditor for software freelancers.
 Evaluate whether the following client messages constitute OUT-OF-SCOPE WORK (scope creep).
