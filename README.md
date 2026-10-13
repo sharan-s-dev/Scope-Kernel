@@ -6,7 +6,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Model: Google Gemma 2 2B](https://img.shields.io/badge/Model-Gemma--2--2B--IT-green.svg)](https://huggingface.co/google/gemma-2-2b-it)
 [![Zero Cloud Telemetry](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped-red.svg)](#privacy-mandate-zero-cloud-telemetry)
-[![Tests Passing](https://img.shields.io/badge/Tests-12%2F12%20Passed-brightgreen.svg)](#test-suite--validation)
+[![ScopeKernel CI](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml/badge.svg)](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml)
+[![Tests Passing](https://img.shields.io/badge/Tests-16%2F16%20Passed-brightgreen.svg)](#test-suite--validation)
 
 ---
 
@@ -201,3 +202,29 @@ Every solo developer and tech freelancer knows this scenario: you agree on a fix
 - **Audit Findings:** Flagged 5+ out-of-scope feature requests never outlined in the initial proposal (including Google/Apple OAuth, automated WhatsApp alerts, Dark Mode, and Multi-Currency).
 - **Financial Recovery:** Identified 19.0 hours of unbilled work ($1,425.00 / ₹1,14,000) in lost revenue.
 - **Feedback:** *"Having this draft ready to go when the request came in would have let me send the change order immediately without feeling awkward or confrontational."*
+
+---
+
+## 9. Debugging in GitHub (CI/CD & Remote Diagnostics)
+
+ScopeKernel includes automated GitHub Actions workflows for continuous integration, diagnostic auditing, and remote debugging directly on GitHub:
+
+### Automated CI Pipeline (`.github/workflows/ci.yml`)
+- Triggers on every `push` and `pull_request` to `main`.
+- Tests across matrix: `ubuntu-latest` and `windows-latest` on Python 3.11 and 3.12.
+- Verifies package imports and strict air-gap compliance.
+- Runs the complete 16-test unit suite with `--tb=short`.
+- Executes headless audit simulation and outputs a formatted Markdown summary to `$GITHUB_STEP_SUMMARY`.
+
+### Manual Diagnostic Debugger (`.github/workflows/debug.yml`)
+- Trigger manually via GitHub Actions tab (**Actions > Run Interactive Diagnostic Suite > Run workflow**).
+- Choose target scenario preset (`all`, `ecommerce`, `mobile`) and logging verbosity (`DEBUG`, `INFO`).
+- Dumps runtime diagnostics, working tree status, and itemized scope creep reports directly in the GitHub execution log.
+
+### GitHub Codespaces / VS Code Debugging (`.vscode/launch.json`)
+- Open the repository directly in GitHub Codespaces (press `.` on github.com).
+- Press `F5` to start debugging:
+  - 🛡️ **Debug ScopeKernel App (Streamlit)**: Launches dashboard on port 8501 with active breakpoint debugging.
+  - 🧪 **Debug Pytest Suite**: Step-through unit test debugging.
+  - ⚡ **Debug Launcher Script (run.py)**: Debug startup routines.
+

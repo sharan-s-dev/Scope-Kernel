@@ -1,0 +1,98 @@
+name: Manual Diagnostic Debugger
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Target Scenario Preset'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ecommerce
+          - mobile
+      log_level:
+        description: 'Log Verbosity'
+        required: true
+        default: 'DEBUG'
+        type: choice
+        options:
+          - DEBUG
+          - INFO
+          - WARNING
+
+jobs:
+  diagnostic-debug:
+    name: Run Interactive Diagnostic Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: System Environment Diagnostics
+        run: |
+          echo "=== Python Environment ==="
+          python --version
+          echo "=== Installed Packages ==="
+          pip list
+          echo "=== Git Working Tree ==="
+          git status --short
+
+      - name: Execute Full Diagnostic Audit
+        run: |
+          python -c "
+          import logging
+          from pathlib import Path
+          from scopekernel.core.schemas import ContractBaseline
+          from scopekernel.core.engine import OllamaEngine, EngineConfig, EngineMode
+          from scopekernel.core.auditor import ScopeAuditor
+
+          logging.basicConfig(level=logging.${{ inputs.log_level }})
+          engine = OllamaEngine(config=EngineConfig(mode=EngineMode.OFFLINE_HEURISTIC))
+          auditor = ScopeAuditor(engine=engine)
+
+          scenarios = []
+          if '${{ inputs.scenario }}' in ('all', 'ecommerce'):
+              scenarios.append(('Artisan Roasters E-Commerce', 'mock_data/sample_sow.md', 'mock_data/sample_chat.txt'))
+          if '${{ inputs.scenario }}' in ('all', 'mobile'):
+              scenarios.append(('PulseFit iOS Mobile', 'mock_data/mobile_app_sow.md', 'mock_data/mobile_app_chat.txt'))
+
+          for title, sow_p, chat_p in scenarios:
+              print(f'\n==================== [AUDIT RUN: {title}] ====================')
+              sow_txt = Path(sow_p).read_text(encoding='utf-8')
+              chat_txt = Path(chat_p).read_text(encoding='utf-8')
+              contract = ContractBaseline.from_markdown(sow_txt)
+              summary = auditor.audit_chat_stream(contract, chat_txt)
+
+              print(f'Contract Project: {contract.project_name}')
+              print(f'Agreed Rate: {contract.currency_symbol}{contract.hourly_rate:.2f}/hr')
+              print(f'Deliverables Scoped: {len(contract.included_deliverables)}')
+              print(f'Explicit Exclusions: {len(contract.explicit_exclusions)}')
+              print(f'Total Messages Scanned: {summary.total_messages}')
+              print(f'Noise Filtered: {summary.filtered_noise_count} ({int(summary.filtered_noise_count/summary.total_messages*100)}%)')
+              print(f'Scope Creep Detected: {summary.creep_detected_count}')
+              print(f'Unbilled Hours: {summary.total_unbilled_hours} hrs')
+              print(f'Revenue Leakage: {summary.currency_symbol}{summary.total_financial_leakage:,.2f}')
+
+              print('\n--- Flagged Items ---')
+              for i, r in enumerate(summary.results, 1):
+                  if r.is_scope_creep:
+                      print(f'[{i}] Feature: {r.violating_feature}')
+                      print(f'    Raw Quote: \"{r.raw_message}\"')
+                      print(f'    Reason: {r.reasoning}')
+                      print(f'    Time / Cost: +{r.estimated_hours}h ({contract.currency_symbol}{r.overage_cost:.2f})')
+                      print(f'    Change Order Draft: {r.suggested_client_reply[:120]}...\n')
+          "
