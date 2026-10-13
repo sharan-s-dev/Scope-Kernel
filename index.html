@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScopeKernel | The Air-Gapped Scope-Creep & Change-Order Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080c14;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+
+    .container { max-width: 1440px; margin: 0 auto; }
+
+    /* Header */
+    .header-hero {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(13, 20, 36, 0.95) 100%);
+      border: 1px solid var(--accent-glow);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+    }
+    .brand-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-highlight {
+      background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .badge-airgap {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Action bar */
+    .action-bar {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .scenario-select-wrapper { display: flex; align-items: center; gap: 10px; }
+    select, input[type="number"], input[type="text"] {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+
+    .btn {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn:hover { background: #334155; border-color: rgba(255, 255, 255, 0.3); }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 1rem;
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); }
+
+    /* Layout Grid */
+    .grid-main {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 24px;
+    }
+    @media (max-width: 1024px) {
+      .grid-main { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 190px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      padding: 12px;
+      resize: vertical;
+      outline: none;
+      margin-top: 8px;
+    }
+    textarea:focus { border-color: var(--accent); }
+
+    .file-dropzone {
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.5);
+      cursor: pointer;
+    }
+
+    /* KPI Metrics */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 640px) {
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.2s ease;
+    }
+    .metric-card:hover { transform: translateY(-2px); border-color: var(--accent-glow); }
+    .metric-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; }
+    .metric-value { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 4px 0; }
+    .metric-sub { font-size: 0.75rem; color: var(--text-dim); }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Violation Cards */
+    .creep-card {
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .safe-card {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .tag-danger {
+      background: var(--danger);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+    .tag-safe {
+      background: var(--success);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    /* Chat bubble visualizer */
+    .chat-bubble-client {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px 12px 12px 2px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      max-width: 88%;
+    }
+    .chat-bubble-freelancer {
+      background: #14532d;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 12px 12px 2px 12px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      margin-left: auto;
+      max-width: 88%;
+    }
+    .chat-sender { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .chat-text { font-size: 0.92rem; color: #e2e8f0; }
+    .chat-ts { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; text-align: right; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--success);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header-hero">
+      <div>
+        <h1 class="brand-title">🛡️ Scope<span class="brand-highlight">Kernel</span></h1>
+        <p style="color: var(--text-muted); font-size: 1.05rem;">The Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers</p>
+      </div>
+      <div>
+        <span class="badge-airgap">🔒 100% AIR-GAPPED • ZERO CLOUD TELEMETRY • CLIENT-SIDE INFERENCE</span>
+      </div>
+    </header>
+
+    <!-- Top Action Bar -->
+    <div class="action-bar">
+      <div class="scenario-select-wrapper">
+        <label style="font-size: 0.9rem; font-weight: 600;">⚡ Scenario:</label>
+        <select id="scenarioSelector" onchange="loadSelectedScenario()">
+          <option value="ecommerce">Artisan Roasters (E-Commerce MVP - 50 msgs)</option>
+          <option value="mobile">PulseFit iOS (Mobile Workout MVP - 15 msgs)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Currency:</label>
+          <select id="currencySelector" onchange="updateCurrency()">
+            <option value="$">$ (USD)</option>
+            <option value="₹">₹ (INR)</option>
+            <option value="€">€ (EUR)</option>
+            <option value="£">£ (GBP)</option>
+            <option value="CA$">CA$ (CAD)</option>
+            <option value="AU$">AU$ (AUD)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Rate/hr:</label>
+          <input type="number" id="hourlyRateInput" value="75" min="1" step="5" style="width: 80px;" onchange="recalculateAudit()" />
+        </div>
+
+        <button class="btn" onclick="downloadSowSample()">📥 Download SOW</button>
+        <button class="btn" onclick="downloadChatSample()">📥 Download Chat</button>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Section -->
+    <div class="grid-main">
+      <!-- LEFT PANEL -->
+      <div>
+        <div class="card">
+          <div class="card-title">1. Contract Baseline (Scope of Work)</div>
+          <div class="file-dropzone" onclick="document.getElementById('sowFileInput').click()">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">📄 Drop or click to upload SOW (.md / .txt)</span>
+            <span class="btn" style="padding: 4px 10px; font-size: 0.75rem;">Browse</span>
+            <input type="file" id="sowFileInput" accept=".md,.txt" style="display: none;" onchange="handleSowUpload(event)" />
+          </div>
+          <textarea id="contractText" placeholder="Paste SOW markdown here..."></textarea>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Client Communication Stream</div>
+          <div class="file-dropzone" onclick="document.getElementById('chatFileInput').click()">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">💬 Drop or click to upload chat log (.txt)</span>
+            <span class="btn" style="padding: 4px 10px; font-size: 0.75rem;">Browse</span>
+            <input type="file" id="chatFileInput" accept=".txt" style="display: none;" onchange="handleChatUpload(event)" />
+          </div>
+          <textarea id="chatText" placeholder="Paste raw WhatsApp / Slack chat log here..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="runScopeAudit()">🚀 Run ScopeKernel Audit</button>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div>
+        <!-- KPI Metrics -->
+        <div class="metrics-row">
+          <div class="metric-card">
+            <div class="metric-title">Unbilled Hours</div>
+            <div class="metric-value" id="kpiHours" style="color: var(--warning);">19.0h</div>
+            <div class="metric-sub" id="kpiEvents">5 creep events</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Revenue Leakage</div>
+            <div class="metric-value" id="kpiLeakage" style="color: var(--danger);">$1,425.00</div>
+            <div class="metric-sub">Recoverable delta</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Noise Stripped</div>
+            <div class="metric-value" id="kpiNoise" style="color: var(--success);">83%</div>
+            <div class="metric-sub" id="kpiPruned">40 messages pruned</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Network State</div>
+            <div class="metric-value" style="color: var(--info); font-size: 1.4rem; padding-top: 4px;">Air-Gapped</div>
+            <div class="metric-sub">0 Cloud Packets</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card">
+          <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('matrixTab', this)">📊 Audit Matrix</button>
+            <button class="tab-btn" onclick="switchTab('threadTab', this)">💬 Chat Visualizer</button>
+            <button class="tab-btn" onclick="switchTab('copilotTab', this)">✍️ Diplomatic Copilot</button>
+            <button class="tab-btn" onclick="switchTab('orderTab', this)">📑 Formal Change Order</button>
+          </div>
+
+          <!-- TAB 1: Audit Matrix -->
+          <div id="matrixTab">
+            <div id="matrixList"></div>
+          </div>
+
+          <!-- TAB 2: Chat Thread Visualizer -->
+          <div id="threadTab" style="display: none; max-height: 520px; overflow-y: auto; padding-right: 6px;">
+            <div id="threadList"></div>
+          </div>
+
+          <!-- TAB 3: Diplomatic Copilot -->
+          <div id="copilotTab" style="display: none;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Select tone style and dispatch directly to WhatsApp Web or Email client:</p>
+            <div id="copilotList"></div>
+          </div>
+
+          <!-- TAB 4: Formal Change Order -->
+          <div id="orderTab" style="display: none;">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+              <input type="text" id="contractorName" value="Independent Full-Stack Engineer" placeholder="Contractor Name" style="flex: 1;" onchange="renderChangeOrder()" />
+              <input type="text" id="clientName" value="Artisan Roasters LLC" placeholder="Client Name" style="flex: 1;" onchange="renderChangeOrder()" />
+            </div>
+            <textarea id="changeOrderPreview" style="height: 320px;" readonly></textarea>
+            <div style="display: flex; gap: 12px; margin-top: 12px;">
+              <button class="btn" style="flex: 1;" onclick="downloadChangeOrder('md')">📥 Download Markdown (.md)</button>
+              <button class="btn" style="flex: 1;" onclick="downloadChangeOrder('json')">📥 Download JSON Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Copied to clipboard!</div>
+
+  <script>
+    // Sample Data Sets
+    const PRESETS = {
+      ecommerce: {
+        sow: `# Statement of Work (SOW): Artisan Roasters E-Commerce Platform\n\n**Project Title:** Artisan Roasters Web Platform MVP\n**Hourly Rate:** $75.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- Email and password authentication with session cookies\n- Product catalog grid with category filter\n- Stripe single-item credit card checkout integration\n- Admin dashboard to inspect orders\n- Responsive light-theme user interface\n\n## 2. Explicit Exclusions (Out-of-Scope / Deferred)\n- Social / OAuth Sign-in (Google, Apple, GitHub)\n- Automated SMS and WhatsApp gateway notifications\n- Default dark mode appearance and dynamic theme switching\n- Multi-currency live FX conversion and currency toggles\n- Downloadable PDF invoice & receipt generator\n- Accounting sync with QuickBooks`,
+        chat: `[10/14/24, 9:02 AM] Sarah (Client): Good morning! Hope you had a great weekend.\n[10/14/24, 9:05 AM] Alex (Freelancer): Morning Sarah! Working on catalog today.\n[10/14/24, 9:06 AM] Sarah (Client): Awesome!\n[10/14/24, 11:20 AM] Sarah (Client): Can you share the latest staging link?\n[10/14/24, 11:22 AM] Alex (Freelancer): Deployed at https://staging.artisanroasters.dev\n[10/14/24, 11:23 AM] Sarah (Client): Thanks! Testing now.\n[10/14/24, 1:15 PM] Sarah (Client): Can we quickly add Google and Apple OAuth logins? Most of our users won't type passwords.\n[10/14/24, 2:10 PM] Alex (Freelancer): Noted, checking auth flow.\n[10/15/24, 10:14 AM] Sarah (Client): Just a small tweak: can we also trigger an automated WhatsApp SMS alert on sign-up and order placement?\n[10/15/24, 11:40 AM] Alex (Freelancer): Reviewing messaging endpoints.\n[10/16/24, 9:33 AM] Sarah (Client): One quick change: make the user dashboard dark-mode by default. It looks much cooler.\n[10/17/24, 2:15 PM] Sarah (Client): What if we let users switch currencies from USD to EUR and GBP with live exchange rate conversion on checkout?\n[10/18/24, 10:47 AM] Sarah (Client): Could we generate a downloadable PDF invoice for each order right on the receipt confirmation page?\n[10/18/24, 3:45 PM] Sarah (Client): One more thing: can we also hook up an automated export to Excel (.xlsx) for the inventory counts in admin?\n[10/18/24, 5:10 PM] Sarah (Client): Talk tomorrow! Have a good evening.`,
+        rate: 75,
+        currency: "$"
+      },
+      mobile: {
+        sow: `# Statement of Work (SOW): PulseFit iOS MVP\n\n**Project Title:** PulseFit Personal Workout & Nutrition Tracker\n**Hourly Rate:** $85.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- Local exercise catalog with sets, reps, and weight tracking\n- Rest timer and countdown audio chime\n- Daily nutrition and macro logger\n- Offline local storage with SwiftData\n\n## 2. Explicit Exclusions (Out-of-Scope / Phase 2)\n- Apple Watch companion app and real-time biometric HealthKit sync\n- In-app video streaming player and exercise demo hosting\n- Camera barcode food scanner with OpenFoodFacts OCR API\n- Social leaderboard and friend feeds`,
+        chat: `[11/02/24, 10:15 AM] David (Client): Morning! Tested TestFlight build.\n[11/02/24, 10:18 AM] Elena (Freelancer): Morning David! How does the timer feel?\n[11/02/24, 10:20 AM] David (Client): Timer chime is crisp.\n[11/02/24, 10:22 AM] David (Client): Can we also sync this with Apple Watch so users see their live heart rate during sets?\n[11/03/24, 2:32 PM] David (Client): Can we add an in-app video player to stream exercise form demos from Vimeo or AWS S3?\n[11/04/24, 9:47 AM] David (Client): Typing in food items manually is tedious. What if we add a camera barcode scanner to automatically scan nutrition labels?\n[11/04/24, 1:15 PM] David (Client): Ping me when you get a chance!`,
+        rate: 85,
+        currency: "$"
+      }
+    };
+
+    let auditState = {
+      totalMessages: 0,
+      noiseCount: 0,
+      creepCount: 0,
+      totalHours: 0,
+      currency: "$",
+      rate: 75,
+      results: []
+    };
+
+    function loadSelectedScenario() {
+      const key = document.getElementById("scenarioSelector").value;
+      const data = PRESETS[key] || PRESETS.ecommerce;
+      document.getElementById("contractText").value = data.sow;
+      document.getElementById("chatText").value = data.chat;
+      document.getElementById("hourlyRateInput").value = data.rate;
+      document.getElementById("currencySelector").value = data.currency;
+      auditState.currency = data.currency;
+      auditState.rate = data.rate;
+      runScopeAudit();
+    }
+
+    function updateCurrency() {
+      auditState.currency = document.getElementById("currencySelector").value;
+      recalculateAudit();
+    }
+
+    function handleSowUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        document.getElementById("contractText").value = evt.target.result;
+        runScopeAudit();
+      };
+      reader.readAsText(file);
+    }
+
+    function handleChatUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        document.getElementById("chatText").value = evt.target.result;
+        runScopeAudit();
+      };
+      reader.readAsText(file);
+    }
+
+    function downloadSowSample() {
+      const txt = document.getElementById("contractText").value;
+      downloadFile(txt, "Contract_SOW.md", "text/markdown");
+    }
+
+    function downloadChatSample() {
+      const txt = document.getElementById("chatText").value;
+      downloadFile(txt, "Client_Chat.txt", "text/plain");
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+    }
+
+    // Deterministic Client-Side Audit Engine
+    function runScopeAudit() {
+      const sowText = document.getElementById("contractText").value;
+      const chatText = document.getElementById("chatText").value;
+      const rate = parseFloat(document.getElementById("hourlyRateInput").value) || 75;
+      auditState.rate = rate;
+
+      const lines = chatText.split("\n").filter(l => l.trim().length > 0);
+      const totalMessages = lines.length;
+      let noiseCount = 0;
+      let results = [];
+      let totalHours = 0;
+      let creepCount = 0;
+
+      // Noise regex
+      const noisePatterns = [
+        /^\s*(?:hi|hello|hey|good\s+morning|morning|gm)\b/i,
+        /^\s*(?:ok|okay|cool|sure|awesome|great|perfect|thanks|thank\s+you)\b/i,
+        /^\s*(?:talk\s+tomorrow|see\s+you|ping\s+me)\b/i,
+        /^\s*<media\s+omitted>/i
+      ];
+
+      // Feature detection
+      lines.forEach((line) => {
+        let msg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
+        let isNoise = noisePatterns.some(p => p.test(msg));
+
+        if (isNoise || msg.length < 15) {
+          noiseCount++;
+          return;
+        }
+
+        const msgLower = msg.toLowerCase();
+        let isCreep = false;
+        let feature = "";
+        let clause = "";
+        let reason = "";
+        let hours = 0;
+
+        if (msgLower.includes("oauth") || msgLower.includes("google") || msgLower.includes("apple")) {
+          isCreep = true;
+          feature = "Third-Party Social Authentication (Google / Apple OAuth)";
+          clause = "Exclusion: Social / OAuth Sign-in";
+          reason = "Contract specifies email/password authentication. OAuth requires external developer apps, token exchange callbacks, and session handling.";
+          hours = 4.0;
+        } else if (msgLower.includes("whatsapp") || msgLower.includes("sms") || msgLower.includes("alert")) {
+          isCreep = true;
+          feature = "Automated WhatsApp / SMS Notification Gateway";
+          clause = "Exclusion: Automated SMS / WhatsApp Notifications";
+          reason = "Contract scopes standard web views. External transactional SMS/WhatsApp requires Twilio/Gupshup webhook integrations and message queuing.";
+          hours = 5.0;
+        } else if (msgLower.includes("dark-mode") || msgLower.includes("dark mode")) {
+          isCreep = true;
+          feature = "Default Dark Mode Theming Engine";
+          clause = "Exclusion: Dark Mode Default Theming";
+          reason = "Contract explicitly scoped a responsive light interface. Full dark mode requires color token mapping, contrast audits, and theme switching.";
+          hours = 3.5;
+        } else if (msgLower.includes("currency") || msgLower.includes("exchange rate") || msgLower.includes("eur")) {
+          isCreep = true;
+          feature = "Dynamic Multi-Currency & FX Live Conversion";
+          clause = "Exclusion: Multi-Currency Live Conversion";
+          reason = "Baseline agreement covers single-currency checkout. Real-time FX conversion requires live rates API integration, rounding, and localized checkout.";
+          hours = 6.0;
+        } else if (msgLower.includes("pdf") || msgLower.includes("invoice")) {
+          isCreep = true;
+          feature = "Automated PDF Invoice & Receipt Generator";
+          clause = "Exclusion: Downloadable PDF Invoice Generator";
+          reason = "Agreement scoped standard on-screen order view. Server-side or client-side PDF document rendering is an additional module.";
+          hours = 4.5;
+        } else if (msgLower.includes("excel") || msgLower.includes("xlsx") || msgLower.includes("export")) {
+          isCreep = true;
+          feature = "Automated Excel / CSV Data Export Pipeline";
+          clause = "Exclusion: External Accounting / ERP Export";
+          reason = "Milestone specified standard web table views. Generating formatted multi-sheet Excel files with formulas requires dedicated export pipelines.";
+          hours = 3.5;
+        } else if (msgLower.includes("watch") || msgLower.includes("heart rate")) {
+          isCreep = true;
+          feature = "Apple Watch & Wearable Biometric Sync";
+          clause = "Exclusion: Apple Watch / Wearable Sync";
+          reason = "Milestone scopes standalone iOS mobile app. watchOS companion app requires background HealthKit permissions and real-time device sync.";
+          hours = 8.0;
+        } else if (msgLower.includes("video") || msgLower.includes("stream") || msgLower.includes("vimeo")) {
+          isCreep = true;
+          feature = "In-App Video Streaming Player & CDN Pipeline";
+          clause = "Exclusion: Video Streaming & Exercise Demos";
+          reason = "Milestone covers local static exercise cards. Video streaming introduces AVPlayer caching, buffering, and CDN hosting integration.";
+          hours = 6.0;
+        } else if (msgLower.includes("barcode") || msgLower.includes("scanner")) {
+          isCreep = true;
+          feature = "Camera Barcode Food Scanner with OCR API";
+          clause = "Exclusion: Barcode Food Scanner";
+          reason = "Contract specified manual macro entry. Camera barcode decoding requires AVFoundation camera capture and OpenFoodFacts API payload parsing.";
+          hours = 5.5;
+        }
+
+        if (isCreep) {
+          creepCount++;
+          totalHours += hours;
+        }
+
+        results.push({
+          raw: msg,
+          line: line,
+          isCreep,
+          feature: isCreep ? feature : "General Inquiry",
+          clause: isCreep ? clause : "Within Deliverables Boundary",
+          reason: isCreep ? reason : "Message aligns with active milestone scope.",
+          hours,
+          sender: line.includes("Alex") || line.includes("Elena") ? "Freelancer" : "Client"
+        });
+      });
+
+      auditState.totalMessages = totalMessages;
+      auditState.noiseCount = noiseCount;
+      auditState.creepCount = creepCount;
+      auditState.totalHours = totalHours;
+      auditState.results = results;
+
+      recalculateAudit();
+      showToast("✅ ScopeKernel Audit Complete!");
+    }
+
+    function recalculateAudit() {
+      const rate = parseFloat(document.getElementById("hourlyRateInput").value) || 75;
+      auditState.rate = rate;
+      const sym = auditState.currency;
+
+      document.getElementById("kpiHours").textContent = `${auditState.totalHours.toFixed(1)}h`;
+      document.getElementById("kpiEvents").textContent = `${auditState.creepCount} creep events`;
+      const leakage = auditState.totalHours * rate;
+      document.getElementById("kpiLeakage").textContent = `${sym}${leakage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      const noisePct = auditState.totalMessages > 0 ? Math.round((auditState.noiseCount / auditState.totalMessages) * 100) : 0;
+      document.getElementById("kpiNoise").textContent = `${noisePct}%`;
+      document.getElementById("kpiPruned").textContent = `${auditState.noiseCount} messages pruned`;
+
+      renderMatrix();
+      renderThread();
+      renderCopilot();
+      renderChangeOrder();
+    }
+
+    function renderMatrix() {
+      const container = document.getElementById("matrixList");
+      container.innerHTML = "";
+      const sym = auditState.currency;
+      const rate = auditState.rate;
+
+      const creeps = auditState.results.filter(r => r.isCreep);
+      if (creeps.length === 0) {
+        container.innerHTML = "<div class='safe-card'>🎉 All evaluated messages align with the SOW!</div>";
+        return;
+      }
+
+      creeps.forEach(r => {
+        const cost = (r.hours * rate).toFixed(2);
+        const card = document.createElement("div");
+        card.className = "creep-card";
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span class="tag-danger">OUT-OF-SCOPE CREEP</span>
+            <span style="font-weight: 700;">${sym}${cost} (+${r.hours.toFixed(1)}h)</span>
+          </div>
+          <div style="font-size: 0.95rem; margin-bottom: 6px; font-style: italic; color: #f1f5f9;">"${r.raw}"</div>
+          <div style="font-size: 0.85rem; color: #cbd5e1;">
+            <strong>Feature:</strong> ${r.feature}<br/>
+            <strong>Clause Cited:</strong> ${r.clause}<br/>
+            <strong>Reasoning:</strong> ${r.reason}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderThread() {
+      const container = document.getElementById("threadList");
+      container.innerHTML = "";
+      const sym = auditState.currency;
+      const rate = auditState.rate;
+
+      const lines = document.getElementById("chatText").value.split("\n").filter(l => l.trim().length > 0);
+      lines.forEach(line => {
+        const isClient = !line.includes("Alex") && !line.includes("Elena");
+        const bubble = document.createElement("div");
+        bubble.className = isClient ? "chat-bubble-client" : "chat-bubble-freelancer";
+
+        let tagHtml = "";
+        const matched = auditState.results.find(r => r.line === line);
+        if (matched && matched.isCreep) {
+          const cost = (matched.hours * rate).toFixed(2);
+          tagHtml = `<span class="tag-danger">OUT-OF-SCOPE (+${matched.hours}h / ${sym}${cost})</span>`;
+        }
+
+        bubble.innerHTML = `
+          <div class="chat-sender"><span>${isClient ? 'Client' : 'Freelancer'}</span> ${tagHtml}</div>
+          <div class="chat-text">${line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "")}</div>
+        `;
+        container.appendChild(bubble);
+      });
+    }
+
+    function renderCopilot() {
+      const container = document.getElementById("copilotList");
+      container.innerHTML = "";
+      const sym = auditState.currency;
+      const rate = auditState.rate;
+
+      const creeps = auditState.results.filter(r => r.isCreep);
+      creeps.forEach((r, idx) => {
+        const cost = (r.hours * rate).toFixed(2);
+        const replyCollab = `Hey! Thanks for bringing this up—adding ${r.feature} makes total sense for the user experience. Taking a quick look at our signed SOW, this is currently listed as an out-of-scope addition or deferred item. I would love to build this out as a change order: it would take roughly ${r.hours.toFixed(1)} hours (${sym}${cost} at our agreed rate). Would you like me to tackle this in our active sprint or queue it for Phase 2?`;
+        const replyDirect = `Hi! We can certainly build ${r.feature}. As outlined in our contract exclusions, this falls outside the Phase 1 milestone deliverables. The estimated scope is ${r.hours.toFixed(1)} engineering hours (${sym}${cost}). Please reply to confirm if you would like me to issue a Change Order for this item.`;
+        const replyDefer = `Great idea on ${r.feature}! To protect our launch deadline for the current milestone, I recommend we deliver the agreed MVP deliverables first. I have logged this in our Phase 2 backlog (${r.hours.toFixed(1)} hrs estimate) so we can tackle it immediately following deployment.`;
+        const replyQuick = `Love this idea! Quick heads up though: ${r.feature} isn't in our current SOW. It's about ${r.hours.toFixed(1)} hrs of work (${sym}${cost})—want me to add it as a quick change order or keep it for after launch?`;
+
+        const box = document.createElement("div");
+        box.className = "card";
+        box.style.marginBottom = "14px";
+        box.innerHTML = `
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px;">✉️ #${idx+1}: ${r.feature} (+${r.hours}h / ${sym}${cost})</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">"${r.raw}"</div>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+            <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="setDraft('${idx}', \`${escapeText(replyCollab)}\`)">Collaborative</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="setDraft('${idx}', \`${escapeText(replyDirect)}\`)">Direct / Commercial</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="setDraft('${idx}', \`${escapeText(replyDefer)}\`)">Phase 2 Deferral</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="setDraft('${idx}', \`${escapeText(replyQuick)}\`)">WhatsApp Quick DM</button>
+          </div>
+
+          <textarea id="draftText_${idx}" style="height: 100px;">${replyCollab}</textarea>
+          
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn" onclick="copyDraft('${idx}')">📋 Copy Copy</button>
+            <a class="btn" id="waBtn_${idx}" target="_blank" href="https://web.whatsapp.com/send?text=${encodeURIComponent(replyCollab)}">📲 Send WhatsApp</a>
+            <a class="btn" id="mailBtn_${idx}" href="mailto:?subject=${encodeURIComponent('Scope Update: ' + r.feature)}&body=${encodeURIComponent(replyCollab)}">📧 Open Email</a>
+          </div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function escapeText(str) {
+      return str.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+    }
+
+    function setDraft(idx, text) {
+      document.getElementById(`draftText_${idx}`).value = text;
+      document.getElementById(`waBtn_${idx}`).href = `https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      document.getElementById(`mailBtn_${idx}`).href = `mailto:?subject=Scope Update&body=${encodeURIComponent(text)}`;
+    }
+
+    function copyDraft(idx) {
+      const text = document.getElementById(`draftText_${idx}`).value;
+      navigator.clipboard.writeText(text);
+      showToast("Copied change-order draft to clipboard!");
+    }
+
+    function renderChangeOrder() {
+      const contractor = document.getElementById("contractorName").value;
+      const client = document.getElementById("clientName").value;
+      const sym = auditState.currency;
+      const rate = auditState.rate;
+      const totalCost = (auditState.totalHours * rate).toFixed(2);
+
+      let lines = [
+        `# FORMAL CHANGE ORDER AMENDMENT #01`,
+        `**Project Title:** Freelance Milestone Project`,
+        `**Date:** ${new Date().toISOString().split('T')[0]}`,
+        `**Contractor:** ${contractor}`,
+        `**Client:** ${client}`,
+        `**Hourly Change-Order Rate:** ${sym}${rate.toFixed(2)}/hr\n`,
+        `---\n`,
+        `## 1. Itemized Out-of-Scope Modifications\n`,
+        `| Item # | Feature Requested | Clause Cited | Dev Hours | Financial Delta |`,
+        `|---|---|---|---|---|`
+      ];
+
+      const creeps = auditState.results.filter(r => r.isCreep);
+      creeps.forEach((r, idx) => {
+        const cost = (r.hours * rate).toFixed(2);
+        lines.push(`| ${idx+1} | ${r.feature} | ${r.clause} | ${r.hours.toFixed(1)} hrs | ${sym}${cost} |`);
+      });
+
+      lines.push(
+        `\n---\n`,
+        `## 2. Summary of Contract Impact`,
+        `- **Total Additional Engineering Effort:** ${auditState.totalHours.toFixed(1)} Hours`,
+        `- **Total Net Financial Adjustment:** ${sym}${totalCost}`,
+        `- **Timeline Impact:** +${Math.max(1, Math.round(auditState.totalHours / 8))} Business Days\n`,
+        `---\n`,
+        `## 3. Client Authorization & Sign-Off`,
+        `By signing below, Client authorizes Contractor to commence work on specified items under agreed terms.\n`,
+        `**Contractor Signature:** ___________________________   **Date:** ________`,
+        `**Client Authorized Signature:** ______________________   **Date:** ________`
+      );
+
+      document.getElementById("changeOrderPreview").value = lines.join("\n");
+    }
+
+    function downloadChangeOrder(format) {
+      const md = document.getElementById("changeOrderPreview").value;
+      if (format === 'md') {
+        downloadFile(md, "Formal_Change_Order_Amendment.md", "text/markdown");
+      } else {
+        const data = JSON.stringify(auditState, null, 2);
+        downloadFile(data, "ScopeKernel_Audit_Data.json", "application/json");
+      }
+    }
+
+    function switchTab(tabId, btn) {
+      ['matrixTab', 'threadTab', 'copilotTab', 'orderTab'].forEach(id => {
+        document.getElementById(id).style.display = (id === tabId) ? 'block' : 'none';
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", () => {
+      loadSelectedScenario();
+    });
+  </script>
+</body>
+</html>

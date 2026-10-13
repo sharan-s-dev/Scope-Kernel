@@ -3,13 +3,12 @@
 **The Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers**  
 *Zero Cloud Telemetry • Deterministic Pre-Filtering • Micro-SLM Intelligence (Google Gemma-2-2B)*
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Model: Google Gemma 2 2B](https://img.shields.io/badge/Model-Gemma--2--2B--IT-green.svg)](https://huggingface.co/google/gemma-2-2b-it)
-[![Zero Cloud Telemetry](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped-red.svg)](#privacy-mandate-zero-cloud-telemetry)
-[![ScopeKernel CI](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml/badge.svg)](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml)
-[![Tests Passing](https://img.shields.io/badge/Tests-16%2F16%20Passed-brightgreen.svg)](#test-suite--validation)
-[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=sharan-s-dev/Scope-Kernel&branch=main&mainModule=ui/app.py)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/sharan-s-dev/Scope-Kernel)
+[![Live Demo (GitHub Pages)](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-22c55e?style=for-the-badge&logo=github)](https://sharan-s-dev.github.io/Scope-Kernel/)
+[![ScopeKernel CI](https://img.shields.io/github/actions/workflow/status/sharan-s-dev/Scope-Kernel/ci.yml?branch=main&label=CI%20Pipeline&style=for-the-badge)](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/Tests-16%2F16%20Passing-brightgreen?style=for-the-badge)](https://github.com/sharan-s-dev/Scope-Kernel)
+
+> 🚀 **Open the Live Web Application directly in your browser:**  
+> 👉 **[https://sharan-s-dev.github.io/Scope-Kernel/](https://sharan-s-dev.github.io/Scope-Kernel/)**
 
 ---
 
