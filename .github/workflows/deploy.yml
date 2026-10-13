@@ -1,0 +1,37 @@
+name: Validate Container Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  docker-build:
+    name: Build & Test Production Docker Container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: scopekernel:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Container Health
+        run: |
+          docker build -t scopekernel:test .
+          docker run -d --name test-app -p 8501:8501 scopekernel:test
+          sleep 5
+          docker logs test-app
+          curl --fail http://localhost:8501/_stcore/health || exit 1
+          docker stop test-app

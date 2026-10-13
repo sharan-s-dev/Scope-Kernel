@@ -8,6 +8,8 @@
 [![Zero Cloud Telemetry](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped-red.svg)](#privacy-mandate-zero-cloud-telemetry)
 [![ScopeKernel CI](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml/badge.svg)](https://github.com/sharan-s-dev/Scope-Kernel/actions/workflows/ci.yml)
 [![Tests Passing](https://img.shields.io/badge/Tests-16%2F16%20Passed-brightgreen.svg)](#test-suite--validation)
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=sharan-s-dev/Scope-Kernel&branch=main&mainModule=ui/app.py)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/sharan-s-dev/Scope-Kernel)
 
 ---
 
@@ -227,4 +229,47 @@ ScopeKernel includes automated GitHub Actions workflows for continuous integrati
   - 🛡️ **Debug ScopeKernel App (Streamlit)**: Launches dashboard on port 8501 with active breakpoint debugging.
   - 🧪 **Debug Pytest Suite**: Step-through unit test debugging.
   - ⚡ **Debug Launcher Script (run.py)**: Debug startup routines.
+
+---
+
+## 10. Production Deployment Guide
+
+ScopeKernel is production-ready for deployment across multiple cloud platforms and self-hosted environments:
+
+### Option 1: Streamlit Community Cloud (Recommended & 100% Free)
+1. Fork or push to your GitHub account: `https://github.com/sharan-s-dev/Scope-Kernel`.
+2. Go to **[share.streamlit.io](https://share.streamlit.io)** and log in with GitHub.
+3. Click **"New app"**:
+   - **Repository:** `sharan-s-dev/Scope-Kernel`
+   - **Branch:** `main`
+   - **Main file path:** `ui/app.py`
+4. Click **"Deploy!"**
+*(Your app will be live with full dark-mode styling, sample downloads, and instant analysis).*
+
+### Option 2: Docker Container (Self-Hosted / VPS / AWS / GCP)
+Run with Docker:
+```bash
+docker build -t scopekernel:latest .
+docker run -p 8501:8501 scopekernel:latest
+```
+Or launch with Docker Compose:
+```bash
+docker-compose up -d
+```
+Access at `http://localhost:8501`.
+
+### Option 3: Render (1-Click Deployment)
+ScopeKernel includes a pre-configured `render.yaml` blueprint:
+1. Connect your repository at **[dashboard.render.com](https://dashboard.render.com)**.
+2. Select **"New Web Service"** and connect `sharan-s-dev/Scope-Kernel`.
+3. Render automatically picks up `Procfile` and `render.yaml` to build and serve.
+
+### Option 4: Railway / Heroku / Fly.io
+Deploy directly using the included `Procfile`:
+```bash
+railway up
+# or
+fly launch
+```
+
 
