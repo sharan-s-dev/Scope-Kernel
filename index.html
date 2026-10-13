@@ -321,19 +321,29 @@
         <select id="scenarioSelector" onchange="loadSelectedScenario()">
           <option value="ecommerce">Artisan Roasters (E-Commerce MVP - 50 msgs)</option>
           <option value="mobile">PulseFit iOS (Mobile Workout MVP - 15 msgs)</option>
-          <option value="custom">Custom Contract & Chat (Paste Your Own)</option>
+          <option value="saas">NexusAI SaaS Platform (FastAPI + React + Vector Search)</option>
+          <option value="custom">Blank Contract & Chat (Paste Your Own)</option>
         </select>
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <label style="font-size: 0.85rem; color: var(--text-muted);">AI Engine:</label>
         <select id="aiEngineSelector" onchange="toggleAiEngineInputs()">
-          <option value="dynamic_offline">🔒 Air-Gapped Semantic Engine (Instant On-Device)</option>
-          <option value="gemini_live">🤖 Live Google Gemini 2.0 Flash (Cloud Neural)</option>
+          <option value="dynamic_offline">🔒 Air-Gapped Dynamic NLP (On-Device • Zero Cloud)</option>
+          <option value="gemini_live">🤖 Live Google Gemini AI (Neural Cloud Reasoning)</option>
         </select>
 
-        <div id="geminiKeyContainer" style="display: none; align-items: center; gap: 6px;">
+        <div id="geminiKeyContainer" style="display: none; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <select id="geminiModelSelector" style="font-size: 0.82rem; padding: 6px 8px;">
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Universal)</option>
+            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fast)</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Frontier)</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Legacy)</option>
+          </select>
           <input type="password" id="geminiApiKey" placeholder="Google AI Studio Key" style="width: 170px;" />
+          <button class="btn" style="padding: 5px 10px; font-size: 0.78rem;" onclick="testGeminiApiKey()">⚡ Test Key</button>
+          <span id="geminiKeyStatus" style="font-size: 0.78rem; font-weight: 600;"></span>
         </div>
 
         <div style="display: flex; align-items: center; gap: 6px;">
@@ -457,6 +467,7 @@
 
   <script>
     // Realistic Sample Presets
+    // Realistic Sample Presets
     const PRESETS = {
       ecommerce: {
         sow: `# Statement of Work (SOW): Artisan Roasters E-Commerce Platform\n\n**Project Title:** Artisan Roasters Web Platform MVP\n**Hourly Rate:** $75.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- Email and password authentication with session cookies\n- Product catalog grid with category filter\n- Stripe single-item credit card checkout integration\n- Admin dashboard to inspect orders\n- Responsive light-theme user interface\n\n## 2. Explicit Exclusions (Out-of-Scope / Deferred)\n- Social / OAuth Sign-in (Google, Apple, GitHub)\n- Automated SMS and WhatsApp gateway notifications\n- Default dark mode appearance and dynamic theme switching\n- Multi-currency live FX conversion and currency toggles\n- Downloadable PDF invoice & receipt generator\n- Accounting sync with QuickBooks`,
@@ -470,10 +481,16 @@
         rate: 85,
         currency: "$"
       },
+      saas: {
+        sow: `# Statement of Work (SOW): NexusAI Analytics Platform MVP\n\n**Project Title:** NexusAI Intelligent Analytics Web MVP\n**Hourly Rate:** $95.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- FastAPI REST backend with token JWT auth\n- PostgreSQL database CRUD tables and Alembic migrations\n- Single-tenant workspace metrics dashboard\n- Standard light-theme responsive React frontend\n- Single project CSV dataset upload and preview\n\n## 2. Explicit Exclusions (Out-of-Scope / Deferred)\n- Multi-tier Stripe recurring subscription billing\n- Pinecone vector database RAG search and AI conversational agent\n- Dynamic dark mode and user custom color theme builder\n- Production Kubernetes Helm charts and multi-region AWS ECS cluster\n- Automated PDF executive summary reports and email dispatch\n- Webhook notification triggers and Slack workspace bot`,
+        chat: `[12/01/24, 9:15 AM] Marcus (Client): Good morning! API documentation looks very clean.\n[12/01/24, 9:18 AM] Priya (Freelancer): Thanks Marcus! Glad the OpenAPI spec is clear.\n[12/01/24, 9:20 AM] Marcus (Client): Quick question: can we add multi-tier Stripe recurring subscription billing so we charge $49/mo and $199/mo?\n[12/02/24, 11:30 AM] Marcus (Client): We really need an AI chatbot inside the dashboard using Pinecone vector database and RAG search so users can query their data.\n[12/03/24, 10:05 AM] Marcus (Client): Can we make the dashboard dark mode by default? Most data scientists prefer dark themes.\n[12/04/24, 2:40 PM] Marcus (Client): Can we deploy the entire stack to Kubernetes with Helm charts and automated Terraform provisioning?\n[12/05/24, 4:10 PM] Marcus (Client): Could you also generate an automated PDF executive summary report on the first of each month?\n[12/05/24, 5:30 PM] Marcus (Client): Thanks Priya! Let me know your thoughts tomorrow.`,
+        rate: 95,
+        currency: "$"
+      },
       custom: {
-        sow: `# Statement of Work: Custom Web App MVP\nHourly Rate: $90.00 / hour\n\n## 1. Included Deliverables\n- User registration and dashboard\n- Basic CRUD data table\n\n## 2. Explicit Exclusions\n- Payment gateway integration\n- Automated PDF invoice export\n- Multi-language localization`,
-        chat: `[09/10/24, 10:00 AM] Client: Morning! Looking good.\n[09/10/24, 10:05 AM] Client: Can we add Stripe payment gateway integration next week?\n[09/11/24, 2:30 PM] Client: Could you also add automated PDF invoice export for receipts?`,
-        rate: 90,
+        sow: `# Statement of Work: Custom Client Engagement\n**Project Title:** Custom Client Engagement\n**Hourly Rate:** $80.00 / hour\n\n## 1. Included Deliverables (In-Scope)\n- Core Milestone Deliverable 1\n- Core Milestone Deliverable 2\n\n## 2. Explicit Exclusions (Out-of-Scope)\n- Third-party API integration\n- Automated PDF and Excel export\n- Real-time mobile push notifications`,
+        chat: `[01/10/25, 10:00 AM] Client: Hi there! How is the milestone going?\n[01/10/25, 10:05 AM] Client: Can we add third-party API integration next week?\n[01/11/25, 2:15 PM] Client: Could we also add automated PDF and Excel export for monthly statements?`,
+        rate: 80,
         currency: "$"
       }
     };
@@ -486,6 +503,8 @@
       totalHours: 0,
       currency: "$",
       rate: 75,
+      isCloud: false,
+      activeModel: "Dynamic Semantic NLP",
       results: []
     };
 
@@ -494,16 +513,54 @@
       const keyBox = document.getElementById("geminiKeyContainer");
       const statusPill = document.getElementById("kpiEngineStatus");
       const statusSub = document.getElementById("kpiEngineSub");
+      const model = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-2.5-flash";
       if (mode === "gemini_live") {
         keyBox.style.display = "flex";
         statusPill.textContent = "Neural Cloud";
         statusPill.style.color = "#818cf8";
-        statusSub.textContent = "Google Gemini 2.0 Flash";
+        statusSub.textContent = `Google Gemini (${model})`;
       } else {
         keyBox.style.display = "none";
         statusPill.textContent = "Air-Gapped";
         statusPill.style.color = "var(--info)";
-        statusSub.textContent = "Dynamic Semantic AI";
+        statusSub.textContent = "Dynamic Semantic NLP";
+      }
+    }
+
+    async function testGeminiApiKey() {
+      const key = document.getElementById("geminiApiKey").value.trim();
+      const statusEl = document.getElementById("geminiKeyStatus");
+      const model = document.getElementById("geminiModelSelector").value;
+      if (!key) {
+        statusEl.innerHTML = "<span style='color: var(--danger);'>⚠️ Enter API key first</span>";
+        showToast("⚠️ Please enter a Google AI Studio API key.");
+        return;
+      }
+      statusEl.innerHTML = "<span style='color: var(--info);'>⏳ Pinging...</span>";
+      const t0 = performance.now();
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const resp = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Reply with word: OK" }] }],
+            generationConfig: { maxOutputTokens: 5, temperature: 0.0 }
+          })
+        });
+        const lat = Math.round(performance.now() - t0);
+        if (resp.ok) {
+          statusEl.innerHTML = `<span style='color: var(--success);'>🟢 Connected (${lat}ms)</span>`;
+          showToast(`🟢 Google Gemini (${model}) connected successfully in ${lat}ms!`);
+        } else {
+          const errData = await resp.json().catch(() => ({}));
+          const msg = errData?.error?.message || `HTTP ${resp.status}`;
+          statusEl.innerHTML = `<span style='color: var(--danger);' title='${msg}'>🔴 Error (${resp.status})</span>`;
+          showToast(`🔴 Gemini API Error: ${msg.slice(0, 80)}`);
+        }
+      } catch (err) {
+        statusEl.innerHTML = "<span style='color: var(--danger);'>🔴 Network Error</span>";
+        showToast(`🔴 Connection failed: ${err.message}`);
       }
     }
 
@@ -659,18 +716,75 @@
       return cleaned.length > 2 ? (cleaned.charAt(0).toUpperCase() + cleaned.slice(1)) : "Feature Addition";
     }
 
-    function estimateDevHours(text, clause) {
-      const combined = (text + " " + clause).toLowerCase();
-      if (combined.includes("watch") || combined.includes("wearable") || combined.includes("hardware")) return 8.0;
-      if (combined.includes("video") || combined.includes("stream") || combined.includes("player")) return 6.0;
-      if (combined.includes("currency") || combined.includes("exchange") || combined.includes("payment")) return 6.0;
-      if (combined.includes("camera") || combined.includes("barcode") || combined.includes("ocr")) return 5.5;
-      if (combined.includes("sms") || combined.includes("whatsapp") || combined.includes("alert")) return 5.0;
-      if (combined.includes("pdf") || combined.includes("invoice")) return 4.5;
-      if (combined.includes("oauth") || combined.includes("google") || combined.includes("apple")) return 4.0;
-      if (combined.includes("dark mode") || combined.includes("theme")) return 3.5;
-      if (combined.includes("excel") || combined.includes("xlsx") || combined.includes("export")) return 3.5;
-      return 3.0;
+    function estimateDynamicHours(text, clause) {
+      const combined = (text + " " + (clause || "")).toLowerCase();
+      let base = 2.5;
+      let complexity = 0.0;
+
+      // Hardware / Wearables / IoT / Bluetooth / HealthKit / Biometrics
+      if (/\b(?:watch|wearable|bluetooth|hardware|iot|healthkit|biometric|nfc|sensor)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 5.5);
+      }
+      // Video / Streaming / WebRTC / Audio Transcoding / Media
+      else if (/\b(?:video|stream|media|webrtc|player|transcode|ffmpeg|audio)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 4.0);
+      }
+      // DevOps / Infrastructure / Distributed Systems / Cloud / Kubernetes
+      else if (/\b(?:kubernetes|docker|terraform|aws|cloud|cluster|deploy|ci\/cd|pipeline|redis|queue|celery|rabbitmq|helm)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 4.5);
+      }
+      // AI / Machine Learning / Vector DB / LLM / RAG
+      else if (/\b(?:ai|machine learning|vector|llm|rag|embeddings|pinecone|openai|gemini|vision|chatbot)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 4.0);
+      }
+      // Payments / Billing / Subscriptions / Multi-Currency / Gateways
+      else if (/\b(?:currency|exchange|fx|stripe|payment|subscription|billing|checkout|refund|paypal|razorpay)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 3.5);
+      }
+      // Vision / Camera / OCR / Barcode / Scanner
+      else if (/\b(?:camera|barcode|ocr|scanner|qr)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 3.0);
+      }
+      // Telephony / SMS / Messaging Gateways / Push
+      else if (/\b(?:sms|whatsapp|twilio|alert|push notification|sns|sendgrid)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 2.5);
+      }
+      // Authentication / Security / RBAC / OAuth / SSO
+      else if (/\b(?:oauth|google login|apple login|social login|sso|2fa|mfa|rbac|jwt)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 2.0);
+      }
+      // Document & File Generation / Export / Invoices
+      else if (/\b(?:pdf|invoice|receipt|excel|xlsx|csv|export|report)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 1.5);
+      }
+      // UI / Themes / Visual Customization / Dark Mode
+      else if (/\b(?:dark mode|dark-mode|theme|styling|redesign|palette|animation)\b/i.test(combined)) {
+        complexity = Math.max(complexity, 1.0);
+      }
+      else {
+        // Algorithmic / CRUD / Search / Data Filtering
+        const tokens = ["api", "service", "database", "schema", "table", "endpoint", "cache", "sync", "filter", "search", "upload", "download"];
+        const matches = tokens.filter(t => combined.includes(t)).length;
+        complexity = Math.min(3.5, 0.75 * matches + 0.5);
+      }
+
+      // Additive density bonus ("also", "and", "plus", "as well")
+      const additiveCount = (combined.match(/\b(?:also|and|plus|as well|in addition)\b/g) || []).length;
+      const densityBonus = Math.min(2.5, additiveCount * 0.75);
+
+      const total = Math.round((base + complexity + densityBonus) * 2) / 2.0;
+      return Math.min(Math.max(total, 2.0), 16.0);
+    }
+
+    function generateDynamicCopilotDrafts(feature, msg, clause, hours, rate, currency, clientName, projectName) {
+      const cost = (hours * rate).toFixed(2);
+      const cName = clientName || "there";
+      return {
+        collaborative: `Hey ${cName}! Thanks for bringing this up—adding ${feature} makes complete sense for the product experience. Taking a quick look at our signed SOW for ${projectName}, this is currently listed outside our active milestone deliverables. I would be glad to build this out as a change order: it would take roughly ${hours.toFixed(1)} engineering hours (${currency}${cost} at our agreed rate). Would you prefer I add this to our active milestone or queue it up for Phase 2?`,
+        direct: `Hi ${cName}! We can certainly build ${feature}. As outlined in our contract, this item is outside the active milestone scope. The estimated effort is ${hours.toFixed(1)} engineering hours (${currency}${cost}). Please reply to confirm if you would like me to issue a formal Change Order for this item.`,
+        defer: `Great idea on ${feature}! To protect our launch deadline for ${projectName}, I recommend we deliver the agreed baseline deliverables first. I have logged this in our Phase 2 backlog (${hours.toFixed(1)} hrs estimate) so we can tackle it immediately following deployment.`,
+        quick: `Love this idea! Quick heads up though: ${feature} isn't in our current SOW. It's about ${hours.toFixed(1)} hrs of work (${currency}${cost})—want me to add it as a quick change order or keep it for after launch?`
+      };
     }
 
     // Main Audit Execution
@@ -703,10 +817,11 @@
       const aiMode = document.getElementById("aiEngineSelector").value;
       const geminiKey = document.getElementById("geminiApiKey").value.trim();
 
-      // If user selected Live Gemini API and provided a key, run neural prompt
+      // If user selected Live Gemini API and provided a key, run neural prompt with multi-model fallback
       if (aiMode === "gemini_live" && geminiKey) {
         try {
           results = await runGeminiCloudAudit(lines, ast, geminiKey);
+          auditState.isCloud = true;
           results.forEach(r => {
             if (r.isCreep) {
               creepCount++;
@@ -715,13 +830,26 @@
               noiseCount++;
             }
           });
+          showToast(`🤖 Live AI Audit Complete via ${auditState.activeModel}!`);
         } catch (err) {
           console.warn("Gemini call failed, using dynamic local engine:", err);
-          showToast("⚠️ Gemini API error. Switched to on-device dynamic engine.");
+          showToast(`⚠️ Gemini API error (${err.message.slice(0, 45)}). Switched to On-Device Dynamic Engine.`);
+          auditState.isCloud = false;
+          auditState.activeModel = "Dynamic Semantic NLP";
           results = runLocalDynamicAudit(lines, ast, noisePatterns);
+          results.forEach(r => {
+            if (r.isCreep) {
+              creepCount++;
+              totalHours += r.hours;
+            } else if (r.isNoise) {
+              noiseCount++;
+            }
+          });
         }
       } else {
         // Dynamic On-Device Semantic Cross-Examiner
+        auditState.isCloud = false;
+        auditState.activeModel = "Dynamic Semantic NLP";
         results = runLocalDynamicAudit(lines, ast, noisePatterns);
         results.forEach(r => {
           if (r.isCreep) {
@@ -731,6 +859,7 @@
             noiseCount++;
           }
         });
+        showToast("✅ ScopeKernel On-Device Audit Complete!");
       }
 
       auditState.totalMessages = totalMessages;
@@ -742,28 +871,27 @@
       recalculateAudit();
       btn.textContent = "🚀 Run ScopeKernel Audit";
       btn.disabled = false;
-      showToast("✅ ScopeKernel Audit Complete!");
     }
 
     function runLocalDynamicAudit(lines, ast, noisePatterns) {
       let results = [];
 
       lines.forEach(line => {
-        let msg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
-        let isNoise = noisePatterns.some(p => p.test(msg)) || msg.length < 12;
+        let cleanMsg = line.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "").trim();
+        let isNoise = noisePatterns.some(p => p.test(cleanMsg)) || cleanMsg.length < 10;
 
         if (isNoise) {
-          results.push({ raw: msg, line, isNoise: true, isCreep: false, hours: 0 });
+          results.push({ raw: cleanMsg, line, isNoise: true, isCreep: false, hours: 0 });
           return;
         }
 
-        const feature = extractFeaturePhrase(msg);
+        const feature = extractFeaturePhrase(cleanMsg);
 
         // Score against exclusions
         let bestExclusion = null;
         let bestExclScore = 0;
         ast.exclusions.forEach(excl => {
-          const score = computeSemanticOverlap(msg, excl);
+          const score = computeSemanticOverlap(cleanMsg, excl);
           if (score > bestExclScore) {
             bestExclScore = score;
             bestExclusion = excl;
@@ -774,7 +902,7 @@
         let bestDeliverable = null;
         let bestDelimScore = 0;
         ast.inclusions.forEach(delim => {
-          const score = computeSemanticOverlap(msg, delim);
+          const score = computeSemanticOverlap(cleanMsg, delim);
           if (score > bestDelimScore) {
             bestDelimScore = score;
             bestDeliverable = delim;
@@ -792,12 +920,12 @@
           violatingFeature = bestExclusion;
           clause = "Exclusion: " + bestExclusion;
           reason = `The request directly breaches explicit exclusion clause '${bestExclusion}'. This item was explicitly deferred or marked out-of-scope in the contract.`;
-          hours = estimateDevHours(msg, bestExclusion);
-        } else if (isMutationIntent(msg) && bestDelimScore < 0.6) {
+          hours = estimateDynamicHours(cleanMsg, bestExclusion);
+        } else if (isMutationIntent(cleanMsg) && bestDelimScore < 0.6) {
           isCreep = true;
           clause = "Baseline Deliverables Boundary";
           reason = `The capability '${feature}' is not scoped under the agreed milestone deliverables for ${ast.projectName}.`;
-          hours = estimateDevHours(msg, "");
+          hours = estimateDynamicHours(cleanMsg, "");
         } else {
           isCreep = false;
           clause = "Within Milestone Scope";
@@ -805,8 +933,15 @@
           hours = 0;
         }
 
+        // Extract sender and client name
+        const senderMatch = line.match(/^\[[^\]]+\]\s*([^:(]+)/);
+        const sender = senderMatch ? senderMatch[1].trim() : (line.toLowerCase().includes("alex") || line.toLowerCase().includes("elena") || line.toLowerCase().includes("priya") ? "Freelancer" : "Client");
+        const clientName = sender !== "Freelancer" ? sender : "there";
+
+        const drafts = isCreep ? generateDynamicCopilotDrafts(violatingFeature, cleanMsg, clause, hours, auditState.rate, auditState.currency, clientName, ast.projectName) : null;
+
         results.push({
-          raw: msg,
+          raw: cleanMsg,
           line: line,
           isCreep,
           isNoise: false,
@@ -814,7 +949,8 @@
           clause,
           reason,
           hours,
-          sender: line.toLowerCase().includes("alex") || line.toLowerCase().includes("elena") ? "Freelancer" : "Client"
+          sender: sender,
+          drafts: drafts
         });
       });
 
@@ -822,20 +958,28 @@
     }
 
     function isMutationIntent(text) {
-      const verbs = ["add", "integrate", "create", "build", "support", "enable", "change", "hook up", "connect", "export", "sync", "switch"];
+      const verbs = ["add", "integrate", "create", "build", "support", "enable", "change", "hook up", "connect", "export", "sync", "switch", "deploy", "setup"];
       const lower = text.toLowerCase();
-      return verbs.some(v => lower.includes(v)) || lower.includes("can we") || lower.includes("could we") || lower.includes("what if");
+      return verbs.some(v => lower.includes(v)) || lower.includes("can we") || lower.includes("could we") || lower.includes("what if") || lower.includes("is it possible");
     }
 
     async function runGeminiCloudAudit(lines, ast, apiKey) {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-      const candidateLines = lines.filter(l => l.length > 15);
-      
-      const prompt = `You are ScopeKernel, an expert contract auditor.
-CONTRACT PROJECT: ${ast.projectName}
-INCLUDED DELIVERABLES:
+      const preferredModel = document.getElementById("geminiModelSelector") ? document.getElementById("geminiModelSelector").value : "gemini-2.5-flash";
+      const fallbackModels = [preferredModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash", "gemini-2.0-flash"];
+      const modelsToTry = [...new Set(fallbackModels)];
+
+      const candidateLines = lines.filter(l => l.length > 12);
+
+      const prompt = `You are ScopeKernel, an expert contract auditor for software freelancers.
+Evaluate whether the following client messages constitute OUT-OF-SCOPE WORK (scope creep).
+
+CONTRACT BASELINE FOR: ${ast.projectName}
+HOURLY OVERAGE RATE: ${auditState.currency}${ast.rate}/hr
+
+INCLUDED DELIVERABLES (IN-SCOPE):
 ${ast.inclusions.map(i => "- " + i).join("\n")}
-EXPLICIT EXCLUSIONS:
+
+EXPLICIT EXCLUSIONS (OUT-OF-SCOPE):
 ${ast.exclusions.map(e => "- " + e).join("\n")}
 
 CLIENT MESSAGES TO EVALUATE:
@@ -846,44 +990,85 @@ OUTPUT STRICT JSON ARRAY where each item has:
   {
     "id": 0,
     "is_scope_creep": true/false,
-    "violating_feature": "name of feature",
-    "matched_exclusion": "clause name or null",
-    "reasoning": "brief reason",
-    "estimated_hours": 4.0
+    "violating_feature": "concise name of requested feature",
+    "matched_clause": "exact exclusion clause cited or Baseline Deliverables Boundary",
+    "reasoning": "1-2 sentence contract boundary explanation",
+    "estimated_hours": 4.5,
+    "copilot_drafts": {
+      "collaborative": "Diplomatic change order proposal",
+      "direct": "Commercial boundary enforcement draft",
+      "defer": "Phase 2 backlog deferral draft",
+      "quick": "Slack/WhatsApp casual 2-sentence DM"
+    }
   }
 ]`;
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.0 }
-        })
-      });
+      let lastError = null;
+      for (const model of modelsToTry) {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        try {
+          const resp = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+            })
+          });
 
-      const data = await response.json();
-      const rawText = data.candidates[0].content.parts[0].text;
-      const parsedArray = JSON.parse(rawText);
+          if (!resp.ok) {
+            const errJson = await resp.json().catch(() => ({}));
+            const errMsg = errJson?.error?.message || `HTTP ${resp.status}`;
+            console.warn(`Model ${model} returned error: ${errMsg}. Trying fallback...`);
+            lastError = errMsg;
+            if (errMsg.includes("API_KEY_INVALID") || errMsg.toLowerCase().includes("key not valid")) {
+              throw new Error(`Invalid API Key: ${errMsg}`);
+            }
+            continue;
+          }
 
-      let results = [];
-      parsedArray.forEach(item => {
-        const origLine = candidateLines[item.id] || "";
-        const cleanMsg = origLine.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "");
-        results.push({
-          raw: cleanMsg,
-          line: origLine,
-          isCreep: item.is_scope_creep,
-          isNoise: false,
-          feature: item.violating_feature || "Add-on Feature",
-          clause: item.matched_exclusion || "Deliverables Boundary",
-          reason: item.reasoning,
-          hours: item.estimated_hours || 0,
-          sender: "Client"
-        });
-      });
+          const data = await resp.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) continue;
 
-      return results;
+          // Strip markdown fences
+          const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+          const parsedArray = JSON.parse(cleaned);
+
+          auditState.isCloud = true;
+          auditState.activeModel = model;
+
+          const results = [];
+          parsedArray.forEach(item => {
+            const origLine = candidateLines[item.id] || "";
+            const cleanMsg = origLine.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, "");
+            const senderMatch = origLine.match(/^\[[^\]]+\]\s*([^:(]+)/);
+            const sender = senderMatch ? senderMatch[1].trim() : "Client";
+
+            results.push({
+              raw: cleanMsg,
+              line: origLine,
+              isCreep: !!item.is_scope_creep,
+              isNoise: false,
+              feature: item.violating_feature || "Add-on Feature",
+              clause: item.matched_clause || "Deliverables Boundary",
+              reason: item.reasoning,
+              hours: item.estimated_hours || (item.is_scope_creep ? 3.5 : 0),
+              sender: sender,
+              drafts: item.copilot_drafts
+            });
+          });
+
+          return results;
+        } catch (err) {
+          if (err.message && err.message.includes("Invalid API Key")) {
+            throw err;
+          }
+          lastError = err.message;
+        }
+      }
+
+      throw new Error(lastError || "All Google Gemini models in fallback cascade failed.");
     }
 
     function recalculateAudit() {
@@ -899,6 +1084,19 @@ OUTPUT STRICT JSON ARRAY where each item has:
       const noisePct = auditState.totalMessages > 0 ? Math.round((auditState.noiseCount / auditState.totalMessages) * 100) : 0;
       document.getElementById("kpiNoise").textContent = `${noisePct}%`;
       document.getElementById("kpiPruned").textContent = `${auditState.noiseCount} messages pruned`;
+
+      // Update Network / Engine KPI Card
+      const statusPill = document.getElementById("kpiEngineStatus");
+      const statusSub = document.getElementById("kpiEngineSub");
+      if (auditState.isCloud) {
+        statusPill.textContent = "Neural Cloud";
+        statusPill.style.color = "#818cf8";
+        statusSub.textContent = `Google Gemini (${auditState.activeModel})`;
+      } else {
+        statusPill.textContent = "Air-Gapped";
+        statusPill.style.color = "var(--info)";
+        statusSub.textContent = "Dynamic Semantic NLP";
+      }
 
       renderMatrix();
       renderThread();
@@ -918,14 +1116,21 @@ OUTPUT STRICT JSON ARRAY where each item has:
         return;
       }
 
+      const engineBadge = auditState.isCloud
+        ? `<span class="badge-airgap" style="background: rgba(99,102,241,0.18); color: #a5b4fc; border-color: rgba(99,102,241,0.4); font-size: 0.72rem; padding: 2px 8px;">🤖 Gemini ${auditState.activeModel} (Live Neural)</span>`
+        : `<span class="badge-airgap" style="font-size: 0.72rem; padding: 2px 8px;">🔒 On-Device Dynamic NLP</span>`;
+
       creeps.forEach(r => {
         const cost = (r.hours * rate).toFixed(2);
         const card = document.createElement("div");
         card.className = "creep-card";
         card.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span class="tag-danger">OUT-OF-SCOPE CREEP</span>
-            <span style="font-weight: 700;">${sym}${cost} (+${r.hours.toFixed(1)}h)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="tag-danger">OUT-OF-SCOPE CREEP</span>
+              ${engineBadge}
+            </div>
+            <span style="font-weight: 700; color: #f8fafc;">${sym}${cost} (+${r.hours.toFixed(1)}h)</span>
           </div>
           <div style="font-size: 0.95rem; margin-bottom: 6px; font-style: italic; color: #f1f5f9;">"${r.raw}"</div>
           <div style="font-size: 0.85rem; color: #cbd5e1;">
@@ -946,7 +1151,7 @@ OUTPUT STRICT JSON ARRAY where each item has:
 
       const lines = document.getElementById("chatText").value.split("\n").filter(l => l.trim().length > 0);
       lines.forEach(line => {
-        const isClient = !line.toLowerCase().includes("alex") && !line.toLowerCase().includes("elena");
+        const isClient = !line.toLowerCase().includes("alex") && !line.toLowerCase().includes("elena") && !line.toLowerCase().includes("priya");
         const bubble = document.createElement("div");
         bubble.className = isClient ? "chat-bubble-client" : "chat-bubble-freelancer";
 
@@ -954,7 +1159,7 @@ OUTPUT STRICT JSON ARRAY where each item has:
         const matched = auditState.results.find(r => r.line === line);
         if (matched && matched.isCreep) {
           const cost = (matched.hours * rate).toFixed(2);
-          tagHtml = `<span class="tag-danger">OUT-OF-SCOPE (+${matched.hours}h / ${sym}${cost})</span>`;
+          tagHtml = `<span class="tag-danger">OUT-OF-SCOPE (+${matched.hours.toFixed(1)}h / ${sym}${cost})</span>`;
         }
 
         bubble.innerHTML = `
@@ -974,16 +1179,29 @@ OUTPUT STRICT JSON ARRAY where each item has:
       const creeps = auditState.results.filter(r => r.isCreep);
       creeps.forEach((r, idx) => {
         const cost = (r.hours * rate).toFixed(2);
-        const replyCollab = `Hey! Thanks for bringing this up—adding ${r.feature} makes total sense for the user experience. Taking a quick look at our signed SOW, this is currently listed as an out-of-scope addition or deferred item. I would love to build this out as a change order: it would take roughly ${r.hours.toFixed(1)} hours (${sym}${cost} at our agreed rate). Would you prefer I add this to our active milestone or queue it up for Phase 2?`;
-        const replyDirect = `Hi! We can certainly build ${r.feature}. As outlined in our contract exclusions, this falls outside the active milestone deliverables. The estimated scope is ${r.hours.toFixed(1)} engineering hours (${sym}${cost}). Please reply to confirm if you would like me to issue a Change Order for this item.`;
-        const replyDefer = `Great idea on ${r.feature}! To protect our launch deadline for the current milestone, I recommend we deliver the agreed MVP deliverables first. I have logged this in our Phase 2 backlog (${r.hours.toFixed(1)} hrs estimate) so we can tackle it immediately following deployment.`;
-        const replyQuick = `Love this idea! Quick heads up though: ${r.feature} isn't in our current SOW. It's about ${r.hours.toFixed(1)} hrs of work (${sym}${cost})—want me to add it as a quick change order or keep it for after launch?`;
+        const drafts = r.drafts || generateDynamicCopilotDrafts(
+          r.feature,
+          r.raw,
+          r.clause,
+          r.hours,
+          rate,
+          sym,
+          r.sender !== "Freelancer" ? r.sender : "there",
+          auditState.projectName
+        );
+        const replyCollab = drafts.collaborative;
+        const replyDirect = drafts.direct;
+        const replyDefer = drafts.defer;
+        const replyQuick = drafts.quick;
 
         const box = document.createElement("div");
         box.className = "card";
         box.style.marginBottom = "14px";
         box.innerHTML = `
-          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px;">✉️ #${idx+1}: ${r.feature} (+${r.hours}h / ${sym}${cost})</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+            <div style="font-weight: 700; font-size: 0.95rem;">✉️ #${idx+1}: ${r.feature} (+${r.hours.toFixed(1)}h / ${sym}${cost})</div>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">${auditState.isCloud ? '🤖 Neural AI Generated' : '🔒 Dynamic NLP Generated'}</span>
+          </div>
           <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">"${r.raw}"</div>
           
           <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
@@ -996,7 +1214,7 @@ OUTPUT STRICT JSON ARRAY where each item has:
           <textarea id="draftText_${idx}" style="height: 100px;">${replyCollab}</textarea>
           
           <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button class="btn" onclick="copyDraft('${idx}')">📋 Copy Copy</button>
+            <button class="btn" onclick="copyDraft('${idx}')">📋 Copy Draft</button>
             <a class="btn" id="waBtn_${idx}" target="_blank" href="https://web.whatsapp.com/send?text=${encodeURIComponent(replyCollab)}">📲 Send WhatsApp</a>
             <a class="btn" id="mailBtn_${idx}" href="mailto:?subject=${encodeURIComponent('Scope Update: ' + r.feature)}&body=${encodeURIComponent(replyCollab)}">📧 Open Email</a>
           </div>

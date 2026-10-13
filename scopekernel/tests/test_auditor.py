@@ -236,3 +236,36 @@ def test_arbitrary_custom_contract_dynamic_audit():
     assert "Kafka" in result.suggested_client_reply or "change order" in result.suggested_client_reply.lower()
 
 
+def test_dynamic_complexity_hours_estimation():
+    """Verify dynamic architecture-aware dev hours estimation across diverse technical domains."""
+    engine = OllamaEngine(config=EngineConfig(mode=EngineMode.OFFLINE_SEMANTIC))
+
+    # Hardware/IoT should be high hours
+    h_hardware = engine._estimate_hours_for_feature("Can we integrate Apple Watch and Bluetooth heart-rate sensor?", "")
+    assert h_hardware >= 7.0
+
+    # Infrastructure / Kubernetes
+    h_infra = engine._estimate_hours_for_feature("Deploy this on Kubernetes with Terraform and CI/CD pipeline", "")
+    assert h_infra >= 6.0
+
+    # Simple UI Dark Mode
+    h_dark = engine._estimate_hours_for_feature("Make the dashboard dark mode", "")
+    assert 3.0 <= h_dark <= 4.5
+
+    # Document generation
+    h_doc = engine._estimate_hours_for_feature("Generate downloadable PDF invoices", "")
+    assert 3.5 <= h_doc <= 5.0
+
+
+def test_gemini_connection_validator():
+    """Verify that Gemini connection test returns structured failure for missing/invalid keys."""
+    res_empty = OllamaEngine.test_gemini_connection("")
+    assert res_empty["success"] is False
+    assert "No API key" in res_empty["error"]
+
+    res_invalid = OllamaEngine.test_gemini_connection("INVALID_KEY_12345")
+    assert res_invalid["success"] is False
+    assert "Invalid Google AI Studio Key" in res_invalid["error"] or "API error" in res_invalid["error"]
+
+
+

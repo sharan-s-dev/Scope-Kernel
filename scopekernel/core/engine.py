@@ -37,7 +37,7 @@ class EngineConfig(BaseModel):
 
     base_url: str = "http://localhost:11434"
     model: str = "gemma2:2b"
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-2.5-flash"
     api_key: Optional[str] = None
     temperature: float = 0.0
     top_p: float = 0.2
@@ -152,12 +152,72 @@ class OllamaEngine:
         # Mode 3: Dynamic Semantic Boundary Cross-Examiner (zero-cloud, runs on ANY custom contract)
         return self._dynamic_semantic_audit(prompt=prompt, contract=contract, message=message)
 
+    @classmethod
+    def test_gemini_connection(cls, api_key: str, model: str = "gemini-2.5-flash") -> Dict[str, Any]:
+        """Test API key validity and active model availability against Google AI Studio."""
+        clean_key = (api_key or "").strip()
+        if not clean_key:
+            return {"success": False, "error": "No API key provided."}
+
+        models_to_test = [model, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"]
+        seen = set()
+        test_list = [m for m in models_to_test if not (m in seen or seen.add(m))]
+
+        import time
+        last_error = "Unknown connection error"
+        for m in test_list:
+            endpoint = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
+                f"?key={clean_key}"
+            )
+            body = {
+                "contents": [{"parts": [{"text": "Reply with short word: OK"}]}],
+                "generationConfig": {"temperature": 0.0, "maxOutputTokens": 10},
+            }
+            try:
+                t0 = time.time()
+                with httpx.Client(timeout=8.0) as client:
+                    resp = client.post(endpoint, json=body)
+                    latency_ms = int((time.time() - t0) * 1000)
+                    if resp.status_code == 200:
+                        return {
+                            "success": True,
+                            "active_model": m,
+                            "latency_ms": latency_ms,
+                            "message": f"Verified live connection to Google Gemini ({m}) in {latency_ms}ms.",
+                        }
+                    else:
+                        try:
+                            err_payload = resp.json()
+                            msg = err_payload.get("error", {}).get("message", f"HTTP {resp.status_code}")
+                        except Exception:
+                            msg = f"HTTP {resp.status_code}"
+                        last_error = msg
+                        if "API_KEY_INVALID" in msg or "key not valid" in msg.lower():
+                            return {"success": False, "error": f"Invalid Google AI Studio Key: {msg}"}
+            except Exception as e:
+                last_error = str(e)
+
+        return {"success": False, "error": f"Google Gemini API error: {last_error}"}
+
     def _call_gemini_api(self, prompt: str, system_prompt: Optional[str]) -> Dict[str, Any]:
-        """Execute inference against Google Gemini API with structured JSON output."""
-        endpoint = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.gemini_model}:generateContent"
-            f"?key={self.config.api_key}"
-        )
+        """Execute inference against Google Gemini API with multi-model fallback cascade."""
+        clean_key = (self.config.api_key or "").strip()
+        if not clean_key:
+            raise ValueError("No Gemini API key configured.")
+
+        # Multi-model fallback sequence: user preferred model first, then ultra-reliable fallbacks
+        candidate_models = [
+            self.config.gemini_model,
+            "gemini-2.5-flash",
+            "gemini-1.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-2.0-flash",
+        ]
+        seen = set()
+        models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
+
         contents = [{"parts": [{"text": prompt}]}]
         body: Dict[str, Any] = {
             "contents": contents,
@@ -169,18 +229,49 @@ class OllamaEngine:
         if system_prompt:
             body["systemInstruction"] = {"parts": [{"text": system_prompt}]}
 
-        with httpx.Client(timeout=self.config.timeout_seconds) as client:
-            resp = client.post(endpoint, json=body)
-            resp.raise_for_status()
-            data = resp.json()
-            raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            parsed_json = json.loads(raw_text)
-            return {
-                "success": True,
-                "mode": "gemini_api",
-                "model": self.config.gemini_model,
-                "data": parsed_json,
-            }
+        last_exception = None
+        for model_name in models_to_try:
+            endpoint = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+                f"?key={clean_key}"
+            )
+            try:
+                with httpx.Client(timeout=self.config.timeout_seconds) as client:
+                    resp = client.post(endpoint, json=body)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if not candidates:
+                            continue
+                        raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "{}")
+                        # Strip markdown fences if returned
+                        cleaned_json_str = re.sub(r"^```(?:json)?\s*", "", raw_text.strip(), flags=re.MULTILINE)
+                        cleaned_json_str = re.sub(r"\s*```$", "", cleaned_json_str.strip(), flags=re.MULTILINE)
+                        parsed_json = json.loads(cleaned_json_str)
+
+                        logger.info("Successfully executed inference using Gemini model: %s", model_name)
+                        return {
+                            "success": True,
+                            "mode": "gemini_api",
+                            "model": model_name,
+                            "data": parsed_json,
+                        }
+                    else:
+                        resp_err = resp.text
+                        logger.warning(
+                            "Gemini model '%s' returned HTTP %d: %s. Trying fallback model...",
+                            model_name,
+                            resp.status_code,
+                            resp_err[:120],
+                        )
+                        last_exception = RuntimeError(f"HTTP {resp.status_code} on model {model_name}: {resp_err[:100]}")
+            except Exception as e:
+                logger.warning("Error calling Gemini model '%s': %s", model_name, e)
+                last_exception = e
+
+        if last_exception:
+            raise last_exception
+        raise RuntimeError("All Google Gemini models in fallback cascade failed.")
 
     def _dynamic_semantic_audit(
         self,
@@ -392,24 +483,54 @@ class OllamaEngine:
         return max(jaccard, overlap_boost * 0.7)
 
     def _estimate_hours_for_feature(self, query: str, clause: str) -> float:
-        """Estimate dev time based on technical complexity of capability."""
+        """Dynamically estimate engineering effort based on technical domain, architecture, and scope density."""
         combined = (query + " " + clause).lower()
-        if any(k in combined for k in ["watch", "wearable", "bluetooth", "hardware"]):
-            return 8.0
-        if any(k in combined for k in ["video", "stream", "media", "player"]):
-            return 6.0
-        if any(k in combined for k in ["currency", "exchange", "fx", "stripe", "payment"]):
-            return 6.0
-        if any(k in combined for k in ["camera", "barcode", "ocr", "scanner"]):
-            return 5.5
-        if any(k in combined for k in ["sms", "whatsapp", "twilio", "alert"]):
-            return 5.0
-        if any(k in combined for k in ["pdf", "invoice", "receipt"]):
-            return 4.5
-        if any(k in combined for k in ["oauth", "google login", "apple login", "social login"]):
-            return 4.0
-        if any(k in combined for k in ["dark mode", "theme"]):
-            return 3.5
-        if any(k in combined for k in ["excel", "xlsx", "csv", "export"]):
-            return 3.5
-        return 3.0
+
+        # 1. Baseline engineering effort (setup, branching, manual verification, PR review)
+        base_hours = 2.5
+
+        # 2. Domain complexity analysis
+        complexity_delta = 0.0
+
+        # Hardware / Wearables / IoT / Bluetooth / HealthKit / Biometrics
+        if any(k in combined for k in ["watch", "wearable", "bluetooth", "hardware", "iot", "healthkit", "biometric", "nfc", "sensor"]):
+            complexity_delta = max(complexity_delta, 5.5)
+        # Video / Streaming / WebRTC / Audio Transcoding / Media
+        elif any(k in combined for k in ["video", "stream", "media", "webrtc", "player", "transcode", "ffmpeg", "audio"]):
+            complexity_delta = max(complexity_delta, 4.0)
+        # DevOps / Infrastructure / Distributed Systems / Cloud
+        elif any(k in combined for k in ["kubernetes", "docker", "terraform", "aws", "cloud", "cluster", "deploy", "ci/cd", "pipeline", "redis", "queue", "celery", "rabbitmq"]):
+            complexity_delta = max(complexity_delta, 4.5)
+        # AI / Machine Learning / Vector DB / LLM
+        elif any(k in combined for k in ["ai", "machine learning", "vector", "llm", "rag", "embeddings", "pinecone", "openai", "gemini", "vision"]):
+            complexity_delta = max(complexity_delta, 4.0)
+        # Payments / Billing / Subscriptions / Multi-Currency / Gateways
+        elif any(k in combined for k in ["currency", "exchange", "fx", "stripe", "payment", "subscription", "billing", "checkout", "refund", "paypal", "razorpay"]):
+            complexity_delta = max(complexity_delta, 3.5)
+        # Vision / Camera / OCR / Barcode / Scanner
+        elif any(k in combined for k in ["camera", "barcode", "ocr", "scanner", "qr"]):
+            complexity_delta = max(complexity_delta, 3.0)
+        # Telephony / SMS / Messaging Gateways / Push
+        elif any(k in combined for k in ["sms", "whatsapp", "twilio", "alert", "push notification", "sns", "sendgrid"]):
+            complexity_delta = max(complexity_delta, 2.5)
+        # Authentication / Security / RBAC / OAuth / SSO
+        elif any(k in combined for k in ["oauth", "google login", "apple login", "social login", "sso", "2fa", "mfa", "rbac", "jwt"]):
+            complexity_delta = max(complexity_delta, 2.0)
+        # Document & File Generation / Export / Invoices
+        elif any(k in combined for k in ["pdf", "invoice", "receipt", "excel", "xlsx", "csv", "export", "report"]):
+            complexity_delta = max(complexity_delta, 1.5)
+        # UI / Themes / Visual Customization / Dark Mode
+        elif any(k in combined for k in ["dark mode", "theme", "styling", "redesign", "palette", "animation"]):
+            complexity_delta = max(complexity_delta, 1.0)
+        else:
+            # Algorithmic / CRUD / Search / Data Filtering
+            technical_tokens = ["api", "service", "database", "schema", "table", "endpoint", "cache", "sync", "filter", "search", "upload", "download"]
+            matches = sum(1 for t in technical_tokens if t in combined)
+            complexity_delta = min(3.5, 0.75 * matches + 0.5)
+
+        # 3. Scope density modifier (multiple items linked by "also", "and", "plus")
+        additive_modifiers = sum(1 for m in ["also", "and", "plus", "as well", "in addition"] if m in combined)
+        density_bonus = min(2.5, additive_modifiers * 0.75)
+
+        total = round((base_hours + complexity_delta + density_bonus) * 2) / 2.0
+        return min(max(total, 2.0), 16.0)

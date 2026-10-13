@@ -289,10 +289,39 @@ with st.sidebar:
     )
 
     api_key_input = None
-    gemini_model_choice = "gemini-2.0-flash"
+    gemini_model_choice = "gemini-2.5-flash"
+    clean_gemini_slug = "gemini-2.5-flash"
     if "Gemini" in engine_choice:
-        api_key_input = st.text_input("Google AI Studio API Key", type="password", value=os.environ.get("GEMINI_API_KEY", ""), help="Get a free API key at https://aistudio.google.com")
-        gemini_model_choice = st.selectbox("Google Model", options=["gemini-2.0-flash", "gemini-1.5-flash"], index=0)
+        api_key_input = st.text_input(
+            "Google AI Studio API Key",
+            type="password",
+            value=os.environ.get("GEMINI_API_KEY", ""),
+            help="Free API key from https://aistudio.google.com",
+        )
+        model_display = st.selectbox(
+            "Google Model",
+            options=[
+                "gemini-2.5-flash (Recommended)",
+                "gemini-1.5-flash (Universal)",
+                "gemini-2.5-flash-lite (Fast)",
+                "gemini-3.8-flash (Frontier)",
+                "gemini-2.0-flash (Legacy)",
+            ],
+            index=0,
+            help="gemini-2.5-flash is Google's primary model with multi-model auto-fallback.",
+        )
+        clean_gemini_slug = model_display.split()[0]
+
+        if st.button("⚡ Test Gemini Connection", use_container_width=True):
+            if not api_key_input:
+                st.warning("Please enter your Google AI Studio API key first.")
+            else:
+                with st.spinner("Pinging Google Gemini API..."):
+                    test_res = OllamaEngine.test_gemini_connection(api_key_input, model=clean_gemini_slug)
+                    if test_res.get("success"):
+                        st.success(f"🟢 {test_res.get('message')}")
+                    else:
+                        st.error(f"🔴 {test_res.get('error')}")
 
     ollama_url = st.text_input("Ollama Host", value="http://localhost:11434", help="Must be localhost or 127.0.0.1")
     model_name = st.text_input("Target Model", value="gemma2:2b", help="Google Gemma-2-2B-IT")
@@ -306,7 +335,7 @@ with st.sidebar:
     config = EngineConfig(
         base_url=ollama_url,
         model=model_name,
-        gemini_model=gemini_model_choice,
+        gemini_model=clean_gemini_slug,
         api_key=api_key_input,
         mode=selected_mode,
     )
@@ -549,12 +578,17 @@ with col_right:
                 unsafe_allow_html=True,
             )
         with m4:
+            is_cloud = (selected_mode == EngineMode.GEMINI_API)
+            net_title = "Inference Engine"
+            net_val = f"{clean_gemini_slug}" if is_cloud else "On-Device SLM"
+            net_sub = "Google AI Studio Live" if is_cloud else "Zero Cloud Telemetry"
+            net_color = "#818cf8" if is_cloud else "#10b981"
             st.markdown(
                 f"""
                 <div class="metric-card">
-                    <div class="metric-title">Network State</div>
-                    <div class="metric-value" style="color: #38bdf8; font-size: 1.25rem; padding-top: 6px;">Air-Gapped</div>
-                    <div class="metric-sub">0 Cloud Packets</div>
+                    <div class="metric-title">{net_title}</div>
+                    <div class="metric-value" style="color: {net_color}; font-size: 1.25rem; padding-top: 6px;">{net_val}</div>
+                    <div class="metric-sub">{net_sub}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
