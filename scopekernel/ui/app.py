@@ -383,6 +383,24 @@ with st.sidebar:
     )
 
     st.markdown("---")
+    with st.expander("⭐ Free Trial & Side-Hustle Tiers", expanded=False):
+        st.markdown(
+            """
+            - **🎁 Free Trial:** 1 Active SOW project included *(Currently active)*.
+            - **⚡ Solo Hacker ($29 Lifetime):** Unlimited audits, local Gemma 2 Ollama runtime.
+            - **🏢 Pro Agency ($9/mo):** Multi-client watchdogs & PDF dispute exports.
+            """
+        )
+
+    with st.expander("🚀 Deploy / Self-Host Options", expanded=False):
+        st.markdown(
+            """
+            - **Web:** [GitHub Pages Live App](https://sharan-s-dev.github.io/Scope-Kernel/)
+            - **Local:** `ollama run gemma2:2b`
+            - **Docker:** `docker run -p 8501:8501 scopekernel`
+            """
+        )
+
     st.markdown("### 🔒 Air-Gap Verification")
     st.caption("Verifiable Zero Network Outbound. No tokens or client contracts ever leave your physical device.")
 

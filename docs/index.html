@@ -309,8 +309,10 @@
         <h1 class="brand-title">🛡️ Scope<span class="brand-highlight">Kernel</span></h1>
         <p style="color: var(--text-muted); font-size: 1.05rem;">The Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers</p>
       </div>
-      <div>
-        <span class="badge-airgap">🔒 DYNAMIC SEMANTIC AI • ZERO CLOUD TELEMETRY • LIVE CONTRACT AUDIT</span>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span class="badge-airgap">🔒 GOOGLE GEMMA 2 (2B) • AIR-GAPPED • ZERO CLOUD TELEMETRY</span>
+        <button class="btn" style="padding: 6px 12px; font-size: 0.78rem; background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.4); color: #c7d2fe;" onclick="showPricingModal()">⭐ Free Trial Active</button>
+        <button class="btn" style="padding: 6px 12px; font-size: 0.78rem; background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); color: #6ee7b7;" onclick="showDeployModal()">🚀 Deploy / Self-Host</button>
       </div>
     </header>
 
@@ -329,7 +331,7 @@
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <label style="font-size: 0.85rem; color: var(--text-muted);">AI Engine:</label>
         <select id="aiEngineSelector" onchange="toggleAiEngineInputs()">
-          <option value="dynamic_offline">🔒 Air-Gapped Dynamic NLP (On-Device • Zero Cloud)</option>
+          <option value="dynamic_offline">🔒 Air-Gapped Google Gemma 2 / Dynamic NLP (On-Device • Zero Cloud)</option>
           <option value="gemini_live">🤖 Live Google Gemini AI (Neural Cloud Reasoning)</option>
         </select>
 
@@ -531,7 +533,7 @@
         keyBox.style.display = "none";
         statusPill.textContent = "Air-Gapped";
         statusPill.style.color = "var(--info)";
-        statusSub.textContent = "Dynamic Semantic NLP";
+        statusSub.textContent = "Google Gemma 2 (2B) / Local NLP";
       }
     }
 
@@ -1283,7 +1285,7 @@ OUTPUT STRICT JSON ARRAY where each item has:
       } else {
         statusPill.textContent = "Air-Gapped";
         statusPill.style.color = "var(--info)";
-        statusSub.textContent = "Dynamic Semantic NLP";
+        statusSub.textContent = "Google Gemma 2 (2B) / Local NLP";
       }
 
       renderMatrix();
@@ -1306,7 +1308,7 @@ OUTPUT STRICT JSON ARRAY where each item has:
 
       const engineBadge = auditState.isCloud
         ? `<span class="badge-airgap" style="background: rgba(99,102,241,0.18); color: #a5b4fc; border-color: rgba(99,102,241,0.4); font-size: 0.72rem; padding: 2px 8px;">🤖 Gemini ${auditState.activeModel} (Live Neural)</span>`
-        : `<span class="badge-airgap" style="font-size: 0.72rem; padding: 2px 8px;">🔒 On-Device Dynamic NLP</span>`;
+        : `<span class="badge-airgap" style="font-size: 0.72rem; padding: 2px 8px;">🔒 Google Gemma 2 / Dynamic NLP</span>`;
 
       creeps.forEach(r => {
         const cost = (r.hours * rate).toFixed(2);
@@ -1494,10 +1496,107 @@ OUTPUT STRICT JSON ARRAY where each item has:
       setTimeout(() => { toast.style.display = "none"; }, 3000);
     }
 
+    function showPricingModal() {
+      document.getElementById("pricingModal").style.display = "flex";
+    }
+
+    function closePricingModal() {
+      document.getElementById("pricingModal").style.display = "none";
+    }
+
+    function showDeployModal() {
+      document.getElementById("deployModal").style.display = "flex";
+    }
+
+    function closeDeployModal() {
+      document.getElementById("deployModal").style.display = "none";
+    }
+
     // Initialize on load
     window.addEventListener("DOMContentLoaded", () => {
       loadSelectedScenario();
     });
   </script>
+
+  <!-- Pricing / Free Trial Modal -->
+  <div id="pricingModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="max-width: 580px; width: 100%; border: 1px solid rgba(99,102,241,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.8); position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.3rem; color: #f8fafc;">⭐ ScopeKernel Freelancer License & Tiers</h3>
+        <button onclick="closePricingModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        ScopeKernel is designed as a sustainable side hustle micro-product. Zero cloud hosting overhead enables 99% gross margins.
+      </p>
+      <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+        <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 14px 18px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; color: #34d399; margin-bottom: 4px;">
+            <span>🎁 Free Trial (Active Now)</span>
+            <span>$0.00</span>
+          </div>
+          <div style="font-size: 0.82rem; color: #cbd5e1;">Test on web or local with sample or custom SOW. Audits 1 active project with full change order generator and copilot drafts.</div>
+        </div>
+        <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); padding: 14px 18px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">
+            <span>⚡ Solo Hacker License</span>
+            <span>$29 One-Time Lifetime</span>
+          </div>
+          <div style="font-size: 0.82rem; color: #cbd5e1;">Lifetime local desktop runner bundled with local Ollama Google Gemma-2-2B. Unlimited projects, zero cloud calls, lifetime updates.</div>
+        </div>
+        <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); padding: 14px 18px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; color: #fbbf24; margin-bottom: 4px;">
+            <span>🏢 Pro Agency Tier</span>
+            <span>$9 / month</span>
+          </div>
+          <div style="font-size: 0.82rem; color: #cbd5e1;">Multi-client automated watchdogs for Slack DMs & WhatsApp exports, signed PDF dispute export, and team change-order workflows.</div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <a class="btn" href="https://github.com/sharan-s-dev/Scope-Kernel" target="_blank" style="text-decoration: none;">⭐ Star on GitHub</a>
+        <button class="btn btn-primary" onclick="closePricingModal()">Got It, Continue Free Trial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deploy / Self-Host Modal -->
+  <div id="deployModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="max-width: 600px; width: 100%; border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.8); position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.3rem; color: #f8fafc;">🚀 Deploy & Run ScopeKernel</h3>
+        <button onclick="closeDeployModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+        ScopeKernel supports 4 flexible execution models:
+      </p>
+      <div style="display: grid; gap: 10px; font-size: 0.85rem; margin-bottom: 20px;">
+        <div style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px;">1. 🌐 GitHub Pages (Active Now)</div>
+          <div style="color: #94a3b8;">Zero installation. Runs directly in any web browser with client-side NLP and live Gemini Cloud API.</div>
+        </div>
+        <div style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #34d399; margin-bottom: 4px;">2. 💻 Localhost Ollama + Streamlit (Gemma 2)</div>
+          <code style="display: block; background: #0b0f19; padding: 8px; border-radius: 6px; margin-top: 4px; color: #a5f3fc; font-family: monospace;">
+            ollama run gemma2:2b<br/>
+            python -m streamlit run scopekernel/ui/app.py
+          </code>
+        </div>
+        <div style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #818cf8; margin-bottom: 4px;">3. 🐳 Production Docker Container</div>
+          <code style="display: block; background: #0b0f19; padding: 8px; border-radius: 6px; margin-top: 4px; color: #a5f3fc; font-family: monospace;">
+            docker build -t scopekernel .<br/>
+            docker run -p 8501:8501 scopekernel
+          </code>
+        </div>
+        <div style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px;">
+          <div style="font-weight: 700; color: #f472b6; margin-bottom: 4px;">4. ☁️ Streamlit Community Cloud (Free 1-Click)</div>
+          <div style="color: #94a3b8;">Fork repo to GitHub and connect on <a href="https://share.streamlit.io" target="_blank" style="color: #38bdf8;">share.streamlit.io</a> with main path <code style="color: #f1f5f9;">scopekernel/ui/app.py</code>.</div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <a class="btn" href="https://github.com/sharan-s-dev/Scope-Kernel#5-quickstart--installation" target="_blank" style="text-decoration: none;">📖 Read Install Docs</a>
+        <button class="btn btn-primary" onclick="closeDeployModal()">Close</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
