@@ -1,23 +1,30 @@
 {
   "name": "scopekernel",
   "version": "1.0.0",
-  "description": "Air-Gapped Scope-Creep & Change-Order Engine for Solo Freelancers",
+  "description": "Air-Gapped Scope Creep & Change-Order Engine for Solo Freelancers Powered by Open-Weight Models",
   "main": "run.py",
   "scripts": {
     "start": "python run.py",
-    "dev": "python run.py",
-    "debug": "python run.py",
+    "cli": "python run.py",
+    "web": "python -m http.server 8080 --directory docs",
+    "streamlit": "streamlit run scopekernel/ui/app.py",
     "test": "python -m pytest",
     "audit": "python run.py"
   },
   "keywords": [
+    "hacktoberfest",
     "freelance",
     "scope-creep",
     "gemma",
     "ollama",
     "local-ai",
-    "air-gapped"
+    "air-gapped",
+    "contract-audit"
   ],
-  "author": "ScopeKernel Team",
-  "license": "MIT"
+  "author": "Sharan S (@sharan-s-dev)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sharan-s-dev/Scope-Kernel.git"
+  }
 }
