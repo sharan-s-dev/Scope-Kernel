@@ -11,24 +11,21 @@ ScopeKernel: Air-Gapped Contract Audit & Scope Creep Copilot Powered by Local Op
 
 ---
 
-## 💡 The Backstory: Why I Built ScopeKernel
+## 💡 The Problem: Unbilled Scope Creep in Software Contracts
 
-As an independent software engineer and freelance consultant in **Bengaluru (Karnataka, India)**, balancing software delivery with client relationship management is an everyday trial. Whether building web storefronts for local D2C brands or architecting full-stack applications for overseas startups, the contract starts cleanly: you sign a fixed-price Statement of Work (SOW) — e.g. a ₹1,80,000 (~$2,200) milestone MVP.
+In fixed-price software contracts and freelance milestones, projects usually begin with a clearly defined Statement of Work (SOW). But as development proceeds, client feature requests rarely arrive through formal change-order channels. Instead, extra features are casually slipped into informal chat threads (WhatsApp, Slack DMs, Telegram, email):
+- *"Can we quickly add Google and Apple OAuth logins?"*
+- *"Just a small tweak: can we also trigger an automated SMS alert on sign-up?"*
+- *"One quick change: make the user dashboard dark mode by default."*
 
-Within ten days, however, scope begins to quietly bleed across informal communication channels:
-1. **Midnight WhatsApp DMs:** *"Bhai, can we just add WhatsApp OTP login real quick? Users in India prefer OTP over email."*
-2. **Mid-Sprint Slack Asks:** *"Hey! Real quick, can we support Razorpay and Stripe dual-currency checkout with auto GST invoices?"*
-3. **Informal Email Favors:** *"Can you hook up automated SMS marketing triggers? It should just take 5 minutes on your side!"*
-
-### The "Polite Indian Freelancer Dilemma"
-To avoid looking difficult, argumentative, or risking client rapport, developers often reply casually with *"Sure, let me check"* or silently implement the feature over weekend all-nighters. By project completion, a 30-hour project has silently swelled into 70 hours. Over **₹80,000 to ₹1,20,000 ($1,000–$1,500+) in unbilled engineering labor vanishes** into uncompensated goodwill, resulting in fatigue, missed deadlines, and severe burnout.
+Because developers want to maintain positive client relationships and lack an instant, automated diff between incoming chat requests and the signed baseline, they often absorb extra work for free. Over the course of a project, this results in **30% to 50% unbilled effort**, delayed deadlines, and developer burnout.
 
 ### Why Closed Cloud APIs Fail Here
-1. **Strict Client NDAs & IP Protection:** Commercial contracts carry strict Non-Disclosure Agreements (NDAs). Copy-pasting unreleased client roadmaps, proprietary DB schemas, and private conversation histories into ChatGPT, Claude, or third-party cloud APIs directly breaches client NDAs and corporate compliance.
-2. **Prohibitive Cloud API Economics:** Streaming 500+ messages and contract PDFs through closed commercial APIs costs $15–$30 per audit run in token fees — chewing up the thin profit margins of an independent side hustle or boutique studio.
-3. **Emotional / Diplomatic Friction:** Responding bluntly with *"That is out of scope, pay me more"* burns client goodwill. Developers need diplomatic, culturally calibrated pushback drafts that preserve warm client relationships while steering extra work into formal paid Change Orders.
+1. **Client NDAs & Data Confidentiality:** Commercial client contracts carry strict Non-Disclosure Agreements (NDAs). Copying and pasting unreleased roadmaps, database schemas, and private chat histories into commercial cloud APIs (OpenAI, Anthropic) risks violating client confidentiality.
+2. **Prohibitive API Economics:** Project chat logs span tens of thousands of tokens. Auditing long conversation exports through commercial cloud APIs costs $15–$30 per run in token fees — quickly eroding the margins of an independent project.
+3. **Communication Friction:** A blunt refusal can damage client relationships. Developers need diplomatic, professional responses that steer extra requests into formal paid Change Orders constructively.
 
-**ScopeKernel was built directly out of this real-world frustration:** An **air-gapped contract auditor** that deterministically parses signed SOW baselines, strips 75%+ of conversational fluff in under 5ms, detects scope expansions using **quantized open-weight SLMs (Google Gemma-2-2B)** locally in RAM, and generates **culturally diplomatic pushback drafts and formal signable Change Orders** — with **zero client data ever leaving your machine**.
+**ScopeKernel solves this:** An **air-gapped contract auditor** that deterministically parses signed SOW baselines, strips 75%+ of conversational fluff in under 5ms, detects scope expansions using **quantized open-weight SLMs (Google Gemma-2-2B)** locally in RAM, and generates **diplomatic pushback drafts and formal signable Change Orders** — with **zero client data ever leaving your machine**.
 
 ---
 
@@ -73,7 +70,7 @@ To avoid looking difficult, argumentative, or risking client rapport, developers
 
 ## 🗺️ Multi-Scenario Implementations: Flagship Contract Baselines
 
-While **ScopeKernel** was born out of personal freelance experience in Bengaluru, it is engineered to audit any fixed-price contract across any technology stack. The repository ships with **pre-compiled contract baselines and real-world conversation datasets**:
+ScopeKernel is engineered to audit fixed-price contracts across any technology stack. The repository ships with **pre-compiled contract baselines and real-world conversation datasets**:
 
 ### ☕ Flagship Scenario 1: Artisan Roasters D2C E-Commerce Platform
 * **Contract Type:** Fixed-Price Milestone ($2,500 Base / ₹2,00,000, $75/hr Overage Rate)
@@ -295,4 +292,4 @@ Contributions are enthusiastically welcomed! Check out [`CONTRIBUTING.md`](CONTR
 
 ## 📜 License
 
-ScopeKernel is open-source software licensed under the **[MIT License](LICENSE)**. Built with pride for independent developers, freelancers, and software consultants worldwide.
+ScopeKernel is open-source software licensed under the **[MIT License](LICENSE)**. Built with pride for open-source developers, freelancers, and independent builders worldwide.
