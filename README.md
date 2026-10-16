@@ -43,10 +43,10 @@ Because developers want to maintain positive client relationships and lack an in
   - Dynamic currency toggle between **₹ INR (Lakhs/Thousands)** and **$ USD**.
   - Real-time billable hour rate adjustment ($85/hr or ₹2,500/hr) with immediate financial recalibration.
 - **4-Tone Diplomatic Response Copilot:**
-  - ☕ **Indian Tech Ecosystem:** *"Namaste! Happy to help, let's scope it as a Phase 2 add-on."*
-  - 💼 **Silicon Valley Enterprise:** *"Pursuant to SOW Clause 4.2, this requires a formal Change Order."*
-  - 🛡️ **Strict Legal Boundary:** *"Explicitly excluded under deliverables baseline Section 2."*
-  - 🤝 **Collaborative Agile:** *"Let's backlog this as top priority for Milestone 2."*
+  - 🤝 **Collaborative & Diplomatic:** Proposes scoping additions as an add-on or Phase 2 without friction.
+  - 💼 **Direct & Commercial:** Clear, professional statement of what falls outside current scope with cost/hour estimates.
+  - ⏳ **Phase 2 Deferral:** Recommends completing current milestone first to protect the launch date.
+  - 💬 **Quick DM (WhatsApp / Slack):** Concise 2-line draft for fast asynchronous communication.
 - **Live Visual Analytics:**
   - Visual **Scope Drift Gauge** showing percentage drift over contracted baseline.
   - Itemized clause violation badges (`HIGH`, `MEDIUM`, `LOW`, `NEUTRAL`).
@@ -203,13 +203,13 @@ To empirically validate ScopeKernel's precision, we audited the **Artisan Roaste
 Message: "Can we also enable Apple Sign-In and Google OAuth alongside email/password?"
 Breach: Out of Scope — SOW Section 2.1 specifies standard email/password authentication only.
 Estimated Effort: 6.0 Hours ($450.00 / ₹15,000)
-Diplomatic Draft (Indian Ecosystem): "Namaste! Happy to incorporate Google and Apple OAuth. Since our Phase 1 milestone covers standard email authentication, I can add OAuth as an add-on change order (6 hrs) or bundle it into Phase 2!"
+Diplomatic Draft (Collaborative): "Hey! Adding Google and Apple OAuth makes complete sense. Taking a quick look at our signed SOW, this is currently out of scope. I can build this out as a change order (approx. 6 hrs / $450) or queue it for Phase 2."
 
 [AUDIT DETECTED] Severity: HIGH
 Message: "Need automated WhatsApp and SMS order confirmation updates sent to customers."
 Breach: Out of Scope — SOW Section 2.3 covers Stripe Checkout webhook confirmation only; external messaging gateways are excluded.
 Estimated Effort: 8.0 Hours ($600.00 / ₹20,000)
-Diplomatic Draft (Silicon Valley Enterprise): "Pursuant to Clause 4.2 of our signed SOW, external SMS/WhatsApp gateway integrations require a formal Change Order. I have drafted an amendment for 8 engineering hours for your approval."
+Diplomatic Draft (Direct): "Hi! We can build external WhatsApp/SMS notifications. This falls outside the agreed milestone scope. The estimated effort is 8 engineering hours ($600). Let me know if you would like me to issue a Change Order for this item."
 ```
 
 ---
@@ -284,7 +284,7 @@ tests/test_auditor.py ............                                       [100%]
 
 Contributions are enthusiastically welcomed! Check out [`CONTRIBUTING.md`](CONTRIBUTING.md) for:
 - 📄 Adding new real-world Statement of Work (SOW) scenario baselines
-- 💬 Expanding regional diplomatic response templates (Indian, European, Silicon Valley, Japanese)
+- 💬 Refining diplomatic response templates and negotiation tone presets
 - 🧹 Enhancing regex pre-filtering and noise-stripping heuristics
 - 🤖 Adding new open-weight SLM harnesses (Ollama, llama.cpp, ONNX Runtime)
 
