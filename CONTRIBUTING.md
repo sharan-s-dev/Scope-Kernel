@@ -1,6 +1,6 @@
 # Contributing to ScopeKernel 🛡️
 
-Thank you for your interest in contributing to **ScopeKernel**! We are participating in **Hacktoberfest 2026** and welcome contributions from developers, technical writers, and freelance consultants worldwide.
+Thank you for your interest in contributing to **ScopeKernel**! I am participating in **Hacktoberfest 2026** and welcome contributions from developers, technical writers, and freelance consultants worldwide.
 
 ScopeKernel is an air-gapped contract auditor and scope creep copilot built with open-weight models (Google Gemma-2-2B, Llama 3) to protect independent software engineers and agencies from unbilled scope creep under strict NDAs.
 
@@ -8,7 +8,7 @@ ScopeKernel is an air-gapped contract auditor and scope creep copilot built with
 
 ## 🌟 How You Can Contribute
 
-We have curated several key areas where your contributions will make an immediate impact:
+I have curated several key areas where your contributions will make an immediate impact:
 
 ### 1. Statement of Work (SOW) Scenario Baselines 📄
 Help expand our contract test suite in `mock_data/`:
